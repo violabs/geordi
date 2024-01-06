@@ -23,11 +23,10 @@ private val PARAMETER_BASED_SCENARIOS = SimulationGroup
     .with("beverly",  "Beverly Crusher", LocalDate.now().minusYears(1), 5)
 
 private val SIM_EX_SCENARIOS = SimulationGroup
-    .vars("scenario", "first", "second", "third")
-    .with {
-        "1 through 3" + 1 + 2 + 3 /
-        "4 through 6" + 4 + 5 + 6 /
-        "7 through 9" + 7 + 8 + 9
+    .vars(  "scenario"  , "first", "second", "third")
+    .with { "1 + 2 = 3"  + 1    + 2       + 3 /
+            "4 + 5 = 9"  + 4    + 5       + 9 /
+            "6 + 7 = 13" + 6    + 7       + 13
     }
 
 /**
@@ -45,7 +44,8 @@ class UnitTestExample : UnitSim(testResourceFolder = "unitTestExample") {
         @BeforeAll
         fun setup() = setup<UnitTestExample>(
             FILE_BASED_SCENARIOS to { it::`show file based test` },
-            PARAMETER_BASED_SCENARIOS to { it::`show parameter based test` }
+            PARAMETER_BASED_SCENARIOS to { it::`show parameter based test` },
+            SIM_EX_SCENARIOS to { it::`show sim ex test` }
         )
     }
 
@@ -79,6 +79,15 @@ class UnitTestExample : UnitSim(testResourceFolder = "unitTestExample") {
 
         whenever {
             CrewMember(name, dateJoined, yearsOfService).isSenior
+        }
+    }
+
+    @TestTemplate
+    fun `show sim ex test`(first: String, second: String, third: String) = test {
+        expect { third }
+
+        whenever {
+            first + second
         }
     }
 
