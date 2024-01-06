@@ -51,31 +51,36 @@ class WarpDistributor(
      * @return A mutable list of [Extension] objects required for the test context.
      */
     override fun getAdditionalExtensions(): MutableList<Extension> {
+        val mainList: MutableList<Extension> = mutableListOf()
+
         var indexModifier = 1
 
-        val extensions = mutableListOf<Extension>()
+        val parsedExtensions = entry
+            .value
+            .content
+            .entries
+            .mapIndexed { i, entry ->
+                if (entry.key == "scenario") {
+                    indexModifier = -1
+                    return@mapIndexed null
+                }
 
-        for (entry in entry.value.content.entries) {
-            if (entry.key == "scenario") {
-                indexModifier = -1
-                continue
+                val value = entry.value
+                val index = i + indexModifier
+
+                if (value == null) {
+                    return@mapIndexed PositionCoil(index, null)
+                }
+
+                when(value) {
+                    is Map<*, *> -> PositionCoil(index, value)
+                    is List<*> -> PositionCoil(index, value)
+                    is KClass<*> -> PositionCoil(index, value)
+                    else -> WarpCoil(index, value)
+                }
             }
+            .filterNotNull()
 
-            val value = entry.value
-
-            if (value == null) {
-                extensions.add(PositionCoil(indexModifier, null))
-                continue
-            }
-
-            when(value) {
-                is Map<*, *> -> extensions.add(PositionCoil(indexModifier, value))
-                is List<*> -> extensions.add(PositionCoil(indexModifier, value))
-                is KClass<*> -> extensions.add(PositionCoil(indexModifier, value))
-                else -> extensions.add(WarpCoil(indexModifier, value))
-            }
-        }
-
-        return extensions
+        return (mainList + parsedExtensions).toMutableList()
     }
 }

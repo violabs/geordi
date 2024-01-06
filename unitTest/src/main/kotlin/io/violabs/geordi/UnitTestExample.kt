@@ -9,18 +9,26 @@ import java.time.LocalDate
  * Each scenario includes a name, the path to a scenario file, and the expected output file.
  */
 private val FILE_BASED_SCENARIOS = SimulationGroup
-    .vars("scenario", "scenarioFile", "expectedFile")
-    .with("full", "full_scenario.txt", "full_expected.json")
-    .with("partial", "partial_scenario.txt", "partial_expected.json")
+    .vars("scenario", "scenarioFile",         "expectedFile")
+    .with("full",     "full_scenario.txt",    "full_expected.json")
+    .with("partial",  "partial_scenario.txt", "partial_expected.json")
 
 /**
  * Defines parameter-based scenarios for testing.
  * Each scenario includes a name, a person's name, their date of joining, and their years of service.
  */
 private val PARAMETER_BASED_SCENARIOS = SimulationGroup
-    .vars("scenario", "name", "date joined", "years of service")
-    .with("geordi", "Geordi LaForge", LocalDate.now(), 4)
-    .with("beverly", "Beverly Crusher", LocalDate.now().minusYears(1), 5)
+    .vars("scenario", "name",            "date joined",                               "years of service")
+    .with("geordi",   "Geordi LaForge",  LocalDate.now(),                             4)
+    .with("beverly",  "Beverly Crusher", LocalDate.now().minusYears(1), 5)
+
+private val SIM_EX_SCENARIOS = SimulationGroup
+    .vars("scenario", "first", "second", "third")
+    .with {
+        "1 through 3" + 1 + 2 + 3 /
+        "4 through 6" + 4 + 5 + 6 /
+        "7 through 9" + 7 + 8 + 9
+    }
 
 /**
  * A test class that extends from UnitSim to utilize its testing capabilities.
@@ -86,6 +94,6 @@ class UnitTestExample : UnitSim(testResourceFolder = "unitTestExample") {
          * This example considers a crew member senior if they have 1 year of service.
          */
         val isSenior: Boolean
-            get() = yearsOfService == 1
+            get() = yearsOfService > 3 // low bar
     }
 }

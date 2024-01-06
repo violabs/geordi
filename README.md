@@ -26,12 +26,30 @@ Will be in maven soon.
 Define your scenarios using `SimulationGroup`. Example:
 ```kotlin
 private val FILE_BASED_SCENARIOS = SimulationGroup
-    .vars("scenario", "scenarioFile", "expectedFile")
-    .with("full", "full_scenario.txt", "full_expected.json")
-    .with("partial", "partial_scenario.txt", "partial_expected.json")
+    .vars("scenario", "scenarioFile",         "expectedFile")
+    .with("full",     "full_scenario.txt",    "full_expected.json")
+    .with("partial",  "partial_scenario.txt", "partial_expected.json")
+```
+
+Or use the `Simulation Expression` like:
+```kotlin
+private val FILE_BASED_SCENARIOS = SimulationGroup
+    .vars(  "scenario", "scenarioFile"         , "expectedFile")
+    .with { "full"    + "full_scenario.txt"    + "full_expected.json" /
+            "partial" + "partial_scenario.txt" + "partial_expected.json" 
+    }
+```
+
+```kotlin
+private val FILE_BASED_SCENARIOS = SimulationGroup
+    .vars(  "scenario", "scenarioFile"         , "expectedFile")
+    .with { "full"    and "full_scenario.txt"    and "full_expected.json" /
+            "partial" and "partial_scenario.txt" and "partial_expected.json" 
+    }
 ```
 
 In order for the scenarios to get picked up by the framework, you have to do a small bit of setup in your test class.
+
 ```kotlin
 companion object {
     @JvmStatic
