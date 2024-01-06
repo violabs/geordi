@@ -7,6 +7,7 @@ parameter-based scenarios, making it ideal for a wide range of testing needs. In
 aims to provide a similar level of testing power and flexibility in a more lightweight and Kotlin-friendly package.
 
 ## Features
+- 🚀 **Dynamic Test Creation:** Generate multiple test cases from compact scenario definitions.
 - 📁 **File-Based Testing:** Easily define tests that rely on file inputs and expected outputs.
 - 🔢 **Parameter-Based Testing:** Create tests with varying parameters, including complex objects and data types.
 - 🗂️ **Custom Scenario Management:** Utilize `SimulationGroup` for organized scenario handling.
@@ -19,10 +20,7 @@ aims to provide a similar level of testing power and flexibility in a more light
 - JUnit 5
 
 ### Installation
-Clone the repository and include it in your project:
-```
-git clone https://github.com/your-repository/geordi-test-framework.git
-```
+Will be in maven soon.
 
 ### Setting Up Scenarios
 Define your scenarios using `SimulationGroup`. Example:
@@ -33,12 +31,50 @@ private val FILE_BASED_SCENARIOS = SimulationGroup
     .with("partial", "partial_scenario.txt", "partial_expected.json")
 ```
 
+In order for the scenarios to get picked up by the framework, you have to do a small bit of setup in your test class.
+```kotlin
+companion object {
+    @JvmStatic
+    @BeforeAll
+    fun setup() = setup<UnitTestExample>(
+        FILE_BASED_SCENARIOS to { it::`show file based test` },
+        PARAMETER_BASED_SCENARIOS to { it::`show parameter based test` }
+    )
+}
+```
+Add this companion object which uses the SimulationGroups you want to test, as well as the test function
+it should use. The test function should be a function that takes the same number of parameters as the number of
+variables in the SimulationGroup. The parameters should be in the same order as the variables in the SimulationGroup.
+
+> The `{ it::show file based test }` format basically provides a function where the parameter is an instance
+> of this class. That gives access to the available functions on that class.
+
 ### Writing Test Templates
 Create test templates in your test classes using the `@TestTemplate` annotation. Example:
 ```kotlin
 @TestTemplate
 fun `show file based test`(scenarioFile: String, expectedFile: String) {
     // Test logic here
+}
+```
+
+### Using UnitSim
+UnitSim is a utility class that provides a number of useful functions for testing.
+
+At a high level, it has functionality to test individual methods, which also have pre-made
+functions belonging to them. This can be used either with or without TestTemplates. It allows for mocking
+utilizing the Mockk library.
+
+Full documentation will be available at geordi.violabs.io soon.
+
+```kotlin
+class Example : UnitSim() {
+    @Test
+    fun `test method`() = test {
+        expect { 2 }
+      
+        whenever { 1 + 1 }
+    }
 }
 ```
 
@@ -49,7 +85,7 @@ Run your tests as you would with any standard JUnit 5 setup.
 See `UnitTestExample.kt` for detailed examples of file-based and parameter-based tests.
 
 ## License
-This project is licensed under the MIT License - see the `LICENSE.md` file for details.
+This project is licensed under the Apache 2.0 License - see the `LICENSE.md` file for details.
 
 ## Acknowledgments
 - The JUnit 5 Team for their extensive and well-documented testing framework.
@@ -59,6 +95,7 @@ This project is licensed under the MIT License - see the `LICENSE.md` file for d
 
 ## Road Map
 
+- [ ] Setup Maven Central publishing
 - [ ] Java integration support (mostly there probably)
 - [ ] Integration testing support
   - Spring Boot
