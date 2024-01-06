@@ -156,7 +156,7 @@ abstract class UnitSim(
             expectCall = { expected = givenFn() }
         }
 
-        fun expectFromFile(filename: String, givenFn: (fileContent: String) -> T?) {
+        fun expectFromFileContent(filename: String, givenFn: (fileContent: String) -> T?) {
             val fullFilename = filename.takeIf { testResourceFolder.isEmpty() } ?: "$testResourceFolder/$filename"
 
             val uri =
