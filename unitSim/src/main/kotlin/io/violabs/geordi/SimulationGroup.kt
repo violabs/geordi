@@ -50,8 +50,19 @@ class SimulationGroup(private val properties: Array<out String>) {
         content.values.last().isolated = true
     }
 
+    fun extractIsolated(): Map<String, Scenario> = content.filter { it.value.isolated }
+
     fun ignore(): SimulationGroup = apply {
-        TODO()
+        val anyIsolated = content.values.any { it.isolated }
+
+        if (!anyIsolated) {
+            content
+                .values
+                .filterIndexed { i, _ -> content.values.indices.last != i }
+                .forEach { it.isolated = true }
+        }
+
+        content.values.last().isolated = false
     }
 
     override fun toString(): String {
