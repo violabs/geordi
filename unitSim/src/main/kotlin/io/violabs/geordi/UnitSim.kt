@@ -18,39 +18,20 @@ private val DEFAULT_OBJECT_MAPPER = ObjectMapper()
     .registerKotlinModule()
     .registerModule(JavaTimeModule())
 
-private fun String.asLines(): List<String> = this.split("\n")
-
 @ExtendWith(WarpDriveEngine::class)
 abstract class UnitSim(
     protected val testResourceFolder: String = "",
-    protected val objectMapper: ObjectMapper = DEFAULT_OBJECT_MAPPER
+    protected val objectMapper: ObjectMapper = DEFAULT_OBJECT_MAPPER,
+    private val debugLogging: DebugLogging = DebugLogging.default(),
+    private val debugEnabled: Boolean = true
 ) {
     private val mocks: MutableList<Any> = mutableListOf()
     private val mockCalls = mutableListOf<MockTask<*>>()
     private val debugItems = mutableMapOf<String, Any?>()
 
-    fun <T> T.debug(key: String = UUID.randomUUID().toString()): T {
-        debugItems[key] = this
-
-        return this
-    }
+    fun <T> T.debug(key: String = UUID.randomUUID().toString()): T = debugLogging.addDebugItem(key, this)
 
     inline fun <reified T : Any> mock(): T = mockkClass(type = T::class)
-
-    class MockTask<T : Any>(
-        val mockCall: () -> T?,
-        var returnedItem: T? = null,
-        var throwable: Throwable? = null
-    ) {
-
-        infix fun returns(returnItem: T) {
-            returnedItem = returnItem
-        }
-
-        infix fun throws(throwable: Throwable) {
-            this.throwable = throwable
-        }
-    }
 
     fun <T : Any> every(mockCall: () -> T?): MockTask<T> {
         val task = MockTask(mockCall)
@@ -63,15 +44,22 @@ abstract class UnitSim(
 
         runnable(spec)
 
+        processTestFlow(spec)
+        debugLogging.logDebugItems()
+        finalizeMocks()
+        cleanup()
+    }
+
+    private fun processTestFlow(spec: TestSlice<*>) {
         spec.setupCall()
         spec.expectCall()
         spec.mockSetupCall()
         spec.wheneverCall()
         spec.thenCall()
         spec.tearDownCall()
+    }
 
-        handleDebug()
-
+    private fun finalizeMocks() {
         mockCalls.forEach {
             verify { it.mockCall() }
         }
@@ -79,53 +67,6 @@ abstract class UnitSim(
         if (mocks.isEmpty()) return
 
         confirmVerified(*mocks.toTypedArray())
-        cleanup()
-    }
-
-    private fun stringMax(number: Int, vararg strings: String): Int {
-        return max(strings.maxOfOrNull(String::length) ?: 0, number)
-    }
-
-    private fun buildContent(max: Int, debugLines: List<String>): String {
-        return debugLines.joinToString("\n") { "║ $it${" ".repeat(max - it.length)} ║" }
-    }
-
-    private fun handleDebug() {
-        if (debugItems.isEmpty()) {
-            println("No debug items found")
-            println()
-        } else {
-            val debugTitle = "DEBUG ITEMS"
-
-            val debugLines = debugItems.toString().asLines()
-
-            val max = stringMax(26, *debugLines.toTypedArray())
-
-            val border = "═".repeat(max + 2)
-            val topBorder    = "╔$border╗"
-            val middleBar = "╠$border╣"
-            val bottomBorder = "╚$border╝"
-
-            val debugTitleLine = debugTitle.debugTitleLineFormat(max)
-            val content = buildContent(max, debugLines)
-
-            println(
-                """
-                |$topBorder
-                |$debugTitleLine
-                |$middleBar
-                |$content
-                |$bottomBorder
-            """.trimMargin()
-            )
-            println()
-        }
-    }
-
-    fun String.debugTitleLineFormat(max: Int): String {
-        val debugTitleSpaces = " ".repeat((max - this.length) / 2)
-        val offset = if (max % 2 == 0) " " else ""
-        return "║ $debugTitleSpaces$this$debugTitleSpaces $offset║"
     }
 
     private fun cleanup() {
@@ -166,9 +107,7 @@ abstract class UnitSim(
                     .getResource(fullFilename)
                     ?.toURI() ?: throw Exception("File not available $filename")
 
-            val content =
-                File(uri)
-                    .readText()
+            val content = File(uri).readText()
 
             this.expect { givenFn(content) }
         }
@@ -248,6 +187,7 @@ abstract class UnitSim(
                 }
             }
         }
+
         private fun List<String>.zipWithNulls(other: List<String>) = this.mapIndexed { index, e ->
             val actual = other.getOrNull(index) ?: ""
 
@@ -290,7 +230,6 @@ abstract class UnitSim(
         }
 
         private fun processMocks() {
-
             val (throwables, runnables) = mockCalls.partition { it.throwable != null }
 
             val debugTitle = "MOCK METRICS"
@@ -306,7 +245,7 @@ abstract class UnitSim(
             val debugTitleLine = "║ $debugTitleSpaces$debugTitle$debugTitleSpaces ║"
 
             println(
-                """
+            """
                 |$topBorder
                 |$debugTitleLine
                 |$middleBar
