@@ -22,13 +22,6 @@ private val PARAMETER_BASED_SCENARIOS = SimulationGroup
     .with("geordi",   "Geordi LaForge",  LocalDate.now(),                             4)
     .with("beverly",  "Beverly Crusher", LocalDate.now().minusYears(1), 5)
 
-private val SIM_EX_SCENARIOS = SimulationGroup
-    .vars(  "scenario"  , "first", "second", "third")
-    .with { "1 + 2 = 3"  + 1    + 2       + 3 /
-            "4 + 5 = 9"  + 4    + 5       + 9 /
-            "6 + 7 = 13" + 6    + 7       + 13
-    }
-
 /**
  * A test class that extends from UnitSim to utilize its testing capabilities.
  * This class uses custom scenarios for testing.
@@ -44,8 +37,7 @@ class UnitTestExample : UnitSim(testResourceFolder = "unitTestExample") {
         @BeforeAll
         fun setup() = setup<UnitTestExample>(
             FILE_BASED_SCENARIOS to { it::`show file based test` },
-            PARAMETER_BASED_SCENARIOS to { it::`show parameter based test` },
-            SIM_EX_SCENARIOS to { it::`show sim ex test` }
+            PARAMETER_BASED_SCENARIOS to { it::`show parameter based test` }
         )
     }
 
@@ -97,7 +89,7 @@ class UnitTestExample : UnitSim(testResourceFolder = "unitTestExample") {
      * @param dateJoined The date when the crew member joined.
      * @param yearsOfService The number of years the crew member has served.
      */
-    class CrewMember(val name: String, val dateJoined: LocalDate, private val yearsOfService: Int) {
+    class CrewMember(private val name: String, private val dateJoined: LocalDate, private val yearsOfService: Int) {
         /**
          * Property to check if the crew member is considered senior.
          * This example considers a crew member senior if they have 1 year of service.

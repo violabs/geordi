@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test
 class SimulationGroupTests {
 
     @Test
-    fun `vars will build correctly`() {
+    fun `vars and with will build correctly for method version`() {
         val simulationGroup = SimulationGroup
             .vars("scenario", "b", "c"  )
             .with("first"    ,  2 ,  3   )
