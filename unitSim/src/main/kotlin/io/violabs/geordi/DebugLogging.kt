@@ -94,7 +94,7 @@ internal class DefaultDebugLogging : DebugLogging {
         operator fun component2() = middle
         operator fun component3() = bottom
 
-        constructor(size: Int) : this(size,"═".repeat(DEBUG_DEFAULT_WIDTH + 2))
+        constructor(size: Int) : this(size, "═".repeat(size + 2))
         companion object Defaults {
             const val TOP_LEFT = "╔"
             const val TOP_RIGHT = "╗"
@@ -111,7 +111,7 @@ internal class DefaultDebugLogging : DebugLogging {
         override fun List<Any>.logReturnedCount() = logCount("RETURNED")
         override fun List<Any>.logNullCount() = logCount("NULL")
 
-        private fun List<Any>.logCount(label: String): Unit {
+        private fun List<Any>.logCount(label: String) {
             this.count().also {
                 val message = "# $label: $it"
                 val spaces = " ".repeat(DEBUG_DEFAULT_WIDTH - 1 - message.length)

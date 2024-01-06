@@ -1,27 +1,19 @@
 package io.violabs.geordi
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.mockk.confirmVerified
 import io.mockk.mockkClass
 import io.mockk.verify
 import org.junit.jupiter.api.extension.ExtendWith
 import java.io.File
 import java.util.UUID
-import kotlin.math.max
 import kotlin.reflect.KFunction
+import kotlin.reflect.KProperty
 import kotlin.test.assertFailsWith
 import io.mockk.every as mockkEvery
-
-private val DEFAULT_OBJECT_MAPPER = ObjectMapper()
-    .registerKotlinModule()
-    .registerModule(JavaTimeModule())
 
 @ExtendWith(WarpDriveEngine::class)
 abstract class UnitSim(
     protected val testResourceFolder: String = "",
-    protected val objectMapper: ObjectMapper = DEFAULT_OBJECT_MAPPER,
     private val debugLogging: DebugLogging = DebugLogging.default(),
     private val debugEnabled: Boolean = true
 ) {
@@ -29,7 +21,7 @@ abstract class UnitSim(
     private val mockCalls = mutableListOf<MockTask<*>>()
     private val debugItems = mutableMapOf<String, Any?>()
 
-    fun <T> T.debug(key: String = UUID.randomUUID().toString()): T = debugLogging.addDebugItem(key, this)
+    fun <T> T.debug(key: String = debugItems.size.toString()): T = debugLogging.addDebugItem(key, this)
 
     inline fun <reified T : Any> mock(): T = mockkClass(type = T::class)
 
@@ -45,7 +37,7 @@ abstract class UnitSim(
         runnable(spec)
 
         processTestFlow(spec)
-        debugLogging.logDebugItems()
+        if (debugEnabled) debugLogging.logDebugItems()
         finalizeMocks()
         cleanup()
     }
@@ -87,8 +79,10 @@ abstract class UnitSim(
         internal var tearDownCall: () -> Unit = {}
         private var expectedExists = false
 
-        fun setup(setupFn: () -> Unit) {
-            this.setupCall = setupFn
+        private val objectProvider: DynamicProperties = DynamicProperties()
+
+        fun setup(setupFn: MutableMap<String, Any?>.() -> Unit) {
+            this.setupCall = { setupFn(objectProvider.assign()) }
         }
 
         fun expect(givenFn: () -> T?) {
@@ -127,14 +121,8 @@ abstract class UnitSim(
             }
         }
 
-        fun whenever(whenFn: () -> T?) {
-            wheneverCall = { actual = whenFn() }
-        }
-
-        fun <T> T.debug(key: String = debugItems.size.toString()): T {
-            debugItems[key] = this
-
-            return this
+        fun whenever(whenFn: (DynamicProperties) -> T?) {
+            wheneverCall = { actual = whenFn(objectProvider) }
         }
 
         fun wheneverWithFile(filename: String, whenFn: (file: File) -> T?) {
@@ -229,52 +217,33 @@ abstract class UnitSim(
             this.tearDownCall = tearDownFn
         }
 
-        private fun processMocks() {
+        private fun processMocks() = debugLogging.logDebugMocks {
             val (throwables, runnables) = mockCalls.partition { it.throwable != null }
 
-            val debugTitle = "MOCK METRICS"
-
-            val max = 26
-
-            val border = "═".repeat(max + 2)
-            val topBorder    = "╔$border╗"
-            val middleBar    = "╠$border╣"
-            val bottomBorder = "╚$border╝"
-
-            val debugTitleSpaces = " ".repeat((max - debugTitle.length) / 2)
-            val debugTitleLine = "║ $debugTitleSpaces$debugTitle$debugTitleSpaces ║"
-
-            println(
-            """
-                |$topBorder
-                |$debugTitleLine
-                |$middleBar
-            """.trimMargin()
-            )
-
-            throwables.onEach { mockkEvery { it.mockCall.invoke() } throws it.throwable!! }.count().also {
-                val message = "# THROWN: $it"
-                val spaces = " ".repeat(max - message.length - 1)
-                println("║ $message $spaces ║")
-            }
+            throwables.onEach { mockkEvery { it.mockCall.invoke() } throws it.throwable!! }.logThrownCount()
 
             val (callOnly, returnable) = runnables.partition { it.returnedItem == null }
 
-            callOnly.onEach { mockkEvery { it.mockCall.invoke() } }.count().also {
-                val message = "# NULL: $it"
-                val spaces = " ".repeat(max - message.length - 1)
-                println("║ $message $spaces ║")
+            runnables.logCalledCount()
+
+            callOnly.onEach { mockkEvery { it.mockCall.invoke() } }.logNullCount()
+
+            returnable.onEach { mockkEvery { it.mockCall.invoke() } returns it.returnedItem!! }.logReturnedCount()
+        }
+
+        inner class DynamicProperties {
+            private val properties = mutableMapOf<String, Any?>()
+
+            operator fun getValue(thisRef: Any?, property: KProperty<*>): Any? = properties[property.name]
+
+            operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Any?) {
+                properties[property.name] = value
             }
 
-            returnable.onEach { mockkEvery { it.mockCall.invoke() } returns it.returnedItem!! }.count().also {
-                val message = "# RETURNABLE: $it"
-                val spaces = " ".repeat(max - message.length - 1)
-                println("║ $message $spaces ║")
-            }
-            println(bottomBorder)
-            println()
+            internal fun assign(): MutableMap<String, Any?> = properties
         }
     }
+
 
     companion object {
         inline fun <reified T> setup(provider: (T) -> Array<Pair<KFunction<*>, SimulationGroup>>) {
