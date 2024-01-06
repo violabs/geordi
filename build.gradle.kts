@@ -5,17 +5,30 @@ plugins {
 group = "io.violabs"
 version = "1.0-SNAPSHOT"
 
-repositories {
-    mavenCentral()
+allprojects {
+    group = "io.violabs"
+
+    repositories {
+        mavenCentral()
+    }
+
+    tasks.withType<Test>  {
+        useJUnitPlatform()
+    }
 }
 
-dependencies {
-    testImplementation("org.jetbrains.kotlin:kotlin-test")
+subprojects {
+    apply {
+//        plugin("kotlin")
+        plugin("org.jetbrains.kotlin.jvm")
+    }
+
+    dependencies {
+
+    }
+
 }
 
-tasks.test {
-    useJUnitPlatform()
-}
 kotlin {
     jvmToolchain(20)
 }

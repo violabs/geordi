@@ -3,3 +3,5 @@ plugins {
 }
 rootProject.name = "geordi"
 
+include("core")
+include("unitTest")
