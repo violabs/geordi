@@ -49,7 +49,7 @@ jobs:
           name: jacoco-report
 
       - name: Upload JaCoCo Coverage Report
-        uses: Madrapps/jacoco-report@v1
+        uses: Madrapps/jacoco-report@v1.6.1
         with:
           path: jacocoTestReport.xml
           token: ${{ secrets.GITHUB_TOKEN }}
