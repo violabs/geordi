@@ -50,20 +50,41 @@ class SimulationGroup(private val properties: Array<out String>) {
         content.values.last().isolated = true
     }
 
+    /**
+     * Extracts and returns scenarios that are marked as isolated.
+     *
+     * This function filters the simulation group's content and returns only those scenarios
+     * where the 'isolated' flag is set to true.
+     *
+     * @return A map containing isolated scenarios, keyed by their labels.
+     */
     fun extractIsolated(): Map<String, Scenario> = content.filter { it.value.isolated }
 
+    /**
+     * Modifies the isolation state of scenarios in the simulation group.
+     *
+     * This method ensures that all but the last scenario are isolated if none are currently isolated.
+     * It then sets the isolation of the last scenario to false. This approach is particularly useful
+     * for controlling test execution order or for scenarios where only the last one should be non-isolated.
+     *
+     * @return The current instance of [SimulationGroup] for method chaining.
+     */
     fun ignore(): SimulationGroup = apply {
+        // Check if any scenario is already isolated.
         val anyIsolated = content.values.any { it.isolated }
 
         if (!anyIsolated) {
+            // If no scenarios are isolated, isolate all but the last one.
             content
                 .values
                 .filterIndexed { i, _ -> content.values.indices.last != i }
                 .forEach { it.isolated = true }
         }
 
+        // Set the isolation of the last scenario to false.
         content.values.last().isolated = false
     }
+
 
     override fun toString(): String {
         return content.toString()

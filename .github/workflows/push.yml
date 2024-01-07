@@ -5,7 +5,8 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
+  unit-sim:
+    name: Unit Sim Test
     runs-on: ubuntu-latest
 
     steps:
@@ -29,8 +30,26 @@ jobs:
       - name: Run Gradle tests in unitSim
         run: ./gradlew :unitSim:test
 
+  coverage-report:
+    name: Coverage Report
+    needs: unit-sim
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Upload JaCoCo Coverage Report
+        uses: Madrapps/jacoco-report@v1
+        with:
+          path-to-report: geordi/unitSim/build/reports/jacoco/test/jacocoTestReport.xml
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  notify-discord:
+    name: Notify Discord
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: always()
+    steps:
       - name: Send formatted notification to Discord
-        if: always() # This ensures the step runs whether the previous steps succeeded or failed
         env:
           JOB_STATUS: ${{ job.status }}
           GITHUB_REF: ${{ github.ref }}

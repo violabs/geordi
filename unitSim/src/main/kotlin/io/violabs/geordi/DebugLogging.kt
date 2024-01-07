@@ -3,18 +3,45 @@ package io.violabs.geordi
 import java.util.*
 import kotlin.math.max
 
+/**
+ * Interface defining the contract for debug logging capabilities.
+ *
+ * Allows for storing, adding, and logging debug items, as well as logging debug metrics.
+ */
 interface DebugLogging {
     val debugItems: MutableMap<String, Any?>
+
+    /**
+     * Adds a debug item to the debug items map.
+     *
+     * @param key A unique key for the debug item. Defaults to a random UUID string.
+     * @param value The value of the debug item.
+     * @return The value passed in.
+     */
     fun <T> addDebugItem(key: String = UUID.randomUUID().toString(), value: T): T
 
+    /**
+     * Logs all the debug items stored in the debug items map.
+     */
     fun logDebugItems()
 
+    /**
+     * Logs metrics by calling functions in the MetricsReader interface.
+     *
+     * @param callFn Lambda with MetricsReader receiver for defining which metrics to log.
+     */
     fun logDebugMocks(callFn: MetricsReader.() -> Unit)
 
+    /**
+     * Companion object to provide a default implementation of DebugLogging.
+     */
     companion object {
         fun default(): DebugLogging = DefaultDebugLogging()
     }
 
+    /**
+     * Interface defining methods for reading and logging metrics.
+     */
     interface MetricsReader {
         fun List<Any>.logThrownCount()
         fun List<Any>.logCalledCount()
@@ -27,62 +54,101 @@ internal const val DEBUG_ITEMS_TITLE = "DEBUG ITEMS"
 internal const val DEBUG_MOCKS_TITLE = "MOCK METRICS"
 internal const val DEBUG_DEFAULT_WIDTH = 26
 
+/**
+ * Default implementation of the DebugLogging interface.
+ */
 internal class DefaultDebugLogging : DebugLogging {
     override val debugItems = mutableMapOf<String, Any?>()
+    /**
+     * Adds a debug item to the debug items map.
+     *
+     * @param key The key under which the debug item is stored. It's a unique identifier.
+     * @param value The debug item to be stored. It can be of any type.
+     * @return Returns the value that was added to the debug items map.
+     */
     override fun <T> addDebugItem(key: String, value: T): T {
+        // Stores the value in the debugItems map with the specified key.
         debugItems[key] = value
 
+        // Returns the stored value.
         return value
     }
 
+    /**
+     * Logs all the debug items stored in the debug items map.
+     *
+     * If there are no debug items, it prints a message indicating that no items were found.
+     * Otherwise, it formats and prints all the debug items.
+     */
     override fun logDebugItems() {
+        // Check if there are any debug items to log.
         if (debugItems.isEmpty()) {
             println("No debug items found")
             println()
             return
         }
 
+        // Convert the debug items map to a string representation and split it into lines.
         val debugLines = debugItems.toString().asLines()
 
+        // Determine the maximum width for the debug item lines.
         val max = stringMax(26, *debugLines.toTypedArray())
 
+        // Create border lines for the debug log.
         val (topBorder, middleBar, bottomBorder) = Border(max)
 
+        // Format the title line for the debug items section.
         val debugTitleLine = DEBUG_ITEMS_TITLE.debugTitleLineFormat(max)
+        // Build the content of the debug log with proper formatting.
         val content = buildContent(max, debugLines)
 
+        // Print the formatted debug log.
         println(
             """
-                |$topBorder
-                |$debugTitleLine
-                |$middleBar
-                |$content
-                |$bottomBorder
-            """.trimMargin()
+            |$topBorder
+            |$debugTitleLine
+            |$middleBar
+            |$content
+            |$bottomBorder
+        """.trimMargin()
         )
         println()
     }
 
+    /**
+     * Logs metrics by executing a given function within the context of a MetricsReader.
+     *
+     * @param callFn A lambda function with MetricsReader receiver, specifying the metrics logging logic.
+     */
     override fun logDebugMocks(callFn: DebugLogging.MetricsReader.() -> Unit) {
+        // Create border lines for the mock metrics log.
         val (topBorder, middleBar, bottomBorder) = Border(DEBUG_DEFAULT_WIDTH)
 
+        // Format the title line for the mock metrics section.
         val debugTitleSpaces = " ".repeat((DEBUG_DEFAULT_WIDTH - DEBUG_MOCKS_TITLE.length) / 2)
         val debugTitleLine = "║ $debugTitleSpaces$DEBUG_MOCKS_TITLE$debugTitleSpaces ║"
 
+        // Print the top part of the mock metrics log.
         println(
             """
-                |$topBorder
-                |$debugTitleLine
-                |$middleBar
-            """.trimMargin()
+            |$topBorder
+            |$debugTitleLine
+            |$middleBar
+        """.trimMargin()
         )
 
+        // Execute the provided metrics logging function within the context of DefaultMetricReader.
         callFn(DefaultMetricReader)
 
+        // Print the bottom border of the mock metrics log.
         println(bottomBorder)
         println()
     }
 
+
+    /**
+     * Utility class for generating ASCII art style borders in debug logs.
+     */
     class Border(
         val size: Int,
         val gap: String,
@@ -105,6 +171,9 @@ internal class DefaultDebugLogging : DebugLogging {
         }
     }
 
+    /**
+     * Default implementation of the MetricsReader interface for logging metrics.
+     */
     object DefaultMetricReader : DebugLogging.MetricsReader {
         override fun List<Any>.logThrownCount() = logCount("THROWN")
         override fun List<Any>.logCalledCount() = logCount("CALLED")
@@ -120,17 +189,44 @@ internal class DefaultDebugLogging : DebugLogging {
         }
     }
 
+    /**
+     * Determines the maximum string length, comparing a given number with the lengths of provided strings.
+     *
+     * @param number An integer to compare against the lengths of the strings.
+     * @param strings Vararg parameter of strings to compare their lengths.
+     * @return The maximum value between the given number and the longest string length.
+     */
     private fun stringMax(number: Int, vararg strings: String): Int {
+        // Returns the greater value between 'number' and the length of the longest string in 'strings'.
         return max(strings.maxOfOrNull(String::length) ?: 0, number)
     }
 
+    /**
+     * Builds a formatted string content for logging, within a specified width.
+     *
+     * @param max The maximum width for each line of the content.
+     * @param debugLines A list of strings representing the lines of the content.
+     * @return A formatted string where each line is within the specified width and enclosed in borders.
+     */
     private fun buildContent(max: Int, debugLines: List<String>): String {
+        // Joins the strings in 'debugLines' into a single string, formatting each line to fit within 'max' width.
         return debugLines.joinToString("\n") { "║ $it${" ".repeat(max - it.length)} ║" }
     }
 
+    /**
+     * Formats a title string for use in debug logging, centering it within a specified width.
+     *
+     * @receiver The string to be formatted as a title.
+     * @param max The maximum width for the title line.
+     * @return A formatted title line, centered and enclosed within borders.
+     */
     private fun String.debugTitleLineFormat(max: Int): String {
+        // Calculates the amount of space needed on each side of the title to center it within 'max' width.
         val debugTitleSpaces = " ".repeat((max - this.length) / 2)
+        // Adjusts for even or odd 'max' widths to ensure proper centering.
         val offset = if (max % 2 == 0) " " else ""
+        // Returns the formatted title line, centered and enclosed within borders.
         return "║ $debugTitleSpaces$this$debugTitleSpaces $offset║"
     }
+
 }

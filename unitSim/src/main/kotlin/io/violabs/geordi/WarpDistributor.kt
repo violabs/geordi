@@ -63,34 +63,56 @@ class WarpDistributor(
             .toMutableList()
     }
 
+    /**
+     * A utility class for tracking the presence of a 'scenario' key in a map.
+     *
+     * @property hasScenario A boolean flag indicating the presence of a 'scenario' key.
+     */
     private class HasScenario(private var hasScenario: Boolean)  {
-        fun indexModifier(): Int = if (hasScenario) -1 else 0
+        val indexModifier: Int by lazy {if (hasScenario) -1 else 0 }
 
+        /**
+         * Sets the flag indicating the presence of a 'scenario' key to true.
+         */
         fun yes() {
             this.hasScenario = true
         }
     }
 
+    /**
+     * Determines the appropriate `ParameterResolver` for a given parameter based on its type and index.
+     *
+     * This function checks the type of the value associated with a map entry and returns a suitable [ParameterResolver].
+     * It adjusts the index based on the presence of a 'scenario' key in the map, which is tracked using [HasScenario].
+     *
+     * @param i The original index of the parameter in the map.
+     * @param entry A map entry consisting of a key and a value representing a parameter.
+     * @param hasScenario An instance of `HasScenario` used to track the presence of a 'scenario' key and adjust the index.
+     * @return A `ParameterResolver` appropriate for the type of the value, or null if the key is 'scenario'.
+     */
     private fun determineCoilForParameter(
         i: Int,
         entry: Map.Entry<String, Any?>,
         hasScenario: HasScenario
     ): ParameterResolver? {
+        // Check if the current entry is the 'scenario' key and update hasScenario accordingly.
         if (entry.key == "scenario") {
             hasScenario.yes()
             return null
         }
 
+        // Retrieve the value and calculate the adjusted index.
         val value = entry.value
-        val index = i + hasScenario.indexModifier()
+        val index = i + hasScenario.indexModifier
 
-        if (value == null) return PositionCoil(index, null)
-
-        return when(value) {
+        // Determine and return the appropriate ParameterResolver based on the type of the value.
+        return when (value) {
+            null -> PositionCoil(index, null)
             is Map<*, *> -> PositionCoil(index, value)
             is List<*> -> PositionCoil(index, value)
             is KClass<*> -> PositionCoil(index, value)
             else -> WarpCoil(index, value)
         }
     }
+
 }
