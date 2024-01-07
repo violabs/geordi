@@ -82,5 +82,5 @@ jobs:
               }
             ]
           }' \
-          ${{ secrets.DISCORD_WEBHOOK }}
+          ${{ secrets.VIOLABS_DISCORD_PUBLIC_WEBHOOK }}
       
