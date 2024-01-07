@@ -76,7 +76,6 @@ abstract class UnitSim(
         var wheneverCall: () -> Unit = {}
         internal var thenCall: () -> Unit = this::defaultThenEquals
         internal var tearDownCall: () -> Unit = {}
-        private var expectedExists = false
 
         private val objectProvider: DynamicProperties = DynamicProperties()
 
@@ -84,10 +83,12 @@ abstract class UnitSim(
             this.setupCall = { setupFn(objectProvider.assign()) }
         }
 
-        fun expect(givenFn: () -> T?) {
-            if (expectedExists) throw Exception("Can only have expect or given and not both!!")
-            expectedExists = true
-            expectCall = { expected = givenFn() }
+        fun given(setupFn: MutableMap<String, Any?>.() -> Unit) {
+            this.setupCall = { setupFn(objectProvider.assign()) }
+        }
+
+        fun expect(givenFn: (DynamicProperties) -> T?) {
+            expectCall = { expected = givenFn(objectProvider) }
         }
 
         fun expectFromFileContent(filename: String, givenFn: (fileContent: String) -> T?) {
@@ -107,11 +108,7 @@ abstract class UnitSim(
 
         fun expectNull() = expect { null }
 
-        fun given(givenFn: () -> T?) {
-            if (expectedExists) throw Exception("Can only have expect or given and not both!!")
-            expectedExists = true
-            expectCall = { expected = givenFn() }
-        }
+        fun T.expect() = expect { this }
 
         fun setupMocks(mockSetupFn: () -> Unit) {
             mockSetupCall = {
@@ -240,6 +237,7 @@ abstract class UnitSim(
             }
 
             internal fun assign(): MutableMap<String, Any?> = properties
+            operator fun get(key: String): Any? = properties[key]
         }
     }
 

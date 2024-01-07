@@ -7,6 +7,7 @@ import io.mockk.verify
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
 class UnitSimTests {
     val debugLogging = mockk<DebugLogging>()
@@ -79,6 +80,105 @@ class UnitSimTests {
             verify { debugLogging.addDebugItem(providedKey, debugItem) }
             confirmVerified(debugLogging)
         }
+    }
+
+    @Nested
+    inner class TestSliceTests {
+        // normal flow setup && given
+        @Nested
+        inner class SetupTests : UnitSim() {
+            @Test
+            fun `setup will process field correctly`() = test {
+                setup {
+                    this["test"] = true
+                }
+
+                true.expect()
+
+                whenever {
+                    it["test"]
+                }
+            }
+
+            @Test
+            fun `given will process field correctly`() = test {
+                given {
+                    this["test"] = true
+                }
+
+                true.expect()
+
+                whenever {
+                    DelegateTest(it).test
+                }
+            }
+
+            inner class DelegateTest(dynamicProperties: TestSlice<*>.DynamicProperties) {
+                val test by dynamicProperties
+            }
+        }
+
+        // normal flow expect && from file && null && method based
+        @Nested
+        inner class ExpectedTests : UnitSim() {
+            @Test
+            fun `expect will process with provider`() = test {
+                given { this["test"] = true }
+
+                expect { it["test"] }
+
+                whenever { true }
+            }
+
+            @Test
+            fun `expectFromFileContent will process with a file provided full wheneverWithFile`() = test {
+                expectFromFileContent("simpleExample/simple_example_scenario.txt") {
+                    it.uppercase()
+                }
+
+                wheneverWithFile("simpleExample/simple_example_expected.md") {
+                    it.readLines().last()
+                }
+            }
+
+            @Test
+            fun `expectNull `() = test {
+                expectNull()
+
+                whenever { null }
+            }
+        }
+
+        @Nested
+        inner class ExpectedProvidedFolderTests : UnitSim("simpleExample") {
+            @Test
+            fun `expectFromFileContent will process with a file provided full wheneverWithFile`() = test {
+                expectFromFileContent("simple_example_scenario.txt") {
+                    it.uppercase()
+                }
+
+                wheneverWithFile("simple_example_expected.md") {
+                    it.readLines().last()
+                }
+            }
+
+            @Test
+            fun `missing throws an expected throws an exception`() {
+                assertThrows<Exception> {
+                    test {
+                        expectFromFileContent("missing.txt") {
+                            it
+                        }
+                    }
+                }
+            }
+        }
+
+        // with mocks & without
+
+        // whenever && whenever with file && throws
+
+        // then default && then && then equals
     }
 
     @Nested
