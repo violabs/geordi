@@ -29,10 +29,58 @@ jobs:
       - name: Run Gradle tests in unitSim
         run: ./gradlew :unitSim:test
 
-      - name: Send notification to Discord
+      - name: Send formatted notification to Discord
         if: always() # This ensures the step runs whether the previous steps succeeded or failed
+        env:
+          JOB_STATUS: ${{ job.status }}
+          GITHUB_REF: ${{ github.ref }}
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          GITHUB_WORKFLOW: ${{ github.workflow }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_RUN_ID_LINK: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          TIMESTAMP: ${{ steps.your-timestamp.outputs.time }} # Make sure to generate a timestamp in an earlier step
+          # Choose color based on job status
+          COLOR_CODE_BASED_ON_STATUS: ${{ job.status == 'success' && '3066993' || '15158332' }} # Green for success, red for failure
         run: |
           curl -X POST \
           -H "Content-Type: application/json" \
-          -d '{"content": "GitHub Actions notification - ${{ job.status }}"}' \
-          ${{ secrets.VIOLABS_DISCORD_PUBLIC_WEBHOOK }}
+          -d '{
+            "embeds": [
+              {
+                "title": "GitHub Actions Workflow Status",
+                "description": "Workflow `'"$GITHUB_WORKFLOW"'` on `'"$GITHUB_REPOSITORY"'`",
+                "url": "'"$GITHUB_RUN_ID_LINK"'",
+                "color": '"$COLOR_CODE_BASED_ON_STATUS"',
+                "fields": [
+                  {
+                    "name": "Branch",
+                    "value": "`'"$GITHUB_REF"'`",
+                    "inline": true
+                  },
+                  {
+                    "name": "Commit",
+                    "value": "`'"$GITHUB_SHA"'`",
+                    "inline": true
+                  },
+                  {
+                    "name": "Event",
+                    "value": "`'"$GITHUB_EVENT_NAME"'`",
+                    "inline": true
+                  },
+                  {
+                    "name": "Status",
+                    "value": "`'"$JOB_STATUS"'`",
+                    "inline": false
+                  }
+                ],
+                "footer": {
+                  "text": "GitHub Actions",
+                  "icon_url": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+                },
+                "timestamp": "'"$TIMESTAMP"'"
+              }
+            ]
+          }' \
+          ${{ secrets.DISCORD_WEBHOOK }}
+      
