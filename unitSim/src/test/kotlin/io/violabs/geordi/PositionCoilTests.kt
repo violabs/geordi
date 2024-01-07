@@ -9,6 +9,13 @@ class PositionCoilTests {
     private val positionCoil = PositionCoil(1, "test")
 
     @Test
+    fun `supportsParameter does not due to null parameter`() {
+        val isFalse = !positionCoil.supportsParameter(null, null)
+
+        assert(isFalse)
+    }
+
+    @Test
     fun `supportsParameter does not`() {
         val context: ParameterContext = mockk()
 

@@ -1,8 +1,10 @@
-package io.violabs.geordi
+package io.violabs.geordi.examples
 
+import io.violabs.geordi.*
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.TestTemplate
 import java.time.LocalDate
+
 
 /**
  * Defines file-based scenarios for testing.
@@ -21,6 +23,7 @@ private val PARAMETER_BASED_SCENARIOS = SimulationGroup
     .vars("scenario", "name",            "date joined",                               "years of service")
     .with("geordi",   "Geordi LaForge",  LocalDate.now(),                             4)
     .with("beverly",  "Beverly Crusher", LocalDate.now().minusYears(1), 5)
+
 
 /**
  * A test class that extends from UnitSim to utilize its testing capabilities.
