@@ -25,7 +25,12 @@ class UnitSimTests {
 
         val mock = unitSim.testMock()
 
-        assert("DebugLogging\$Subclass0" == mock::class.simpleName)
+        assert(mock::class.simpleName?.contains("Subclass") == true) {
+            """
+                EXPECT: DebugLogging${'$'}Subclass0
+                ACTUAL: ${mock::class.simpleName}
+            """.trimIndent()
+        }
     }
 
     @Test

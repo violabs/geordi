@@ -51,7 +51,7 @@ jobs:
     steps:
       - name: Send formatted notification to Discord
         env:
-          JOB_STATUS: ${{ job.status }}
+          JOB_STATUS: ${{ needs.unit-sim.result }}
           GITHUB_REF: ${{ github.ref }}
           GITHUB_SHA: ${{ github.sha }}
           GITHUB_EVENT_NAME: ${{ github.event_name }}
