@@ -29,30 +29,15 @@ jobs:
             ${{ runner.os }}-gradle-
       - name: Run Gradle tests in unitSim
         run: ./gradlew :unitSim:test
-      - name: Upload Jacoco Report
-        uses: actions/upload-artifact@v3
+      - name: Add coverage to PR
+        uses: madrapps/jacoco-report@v1.6.1
         with:
-          name: jacoco-report
-          path: unitSim/build/reports/jacoco/test/jacocoTestReport.xml
-
-
-
-  coverage-report:
-    name: Coverage Report
-    needs: unit-sim
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Download Jacoco Report
-        uses: actions/download-artifact@v3
-        with:
-          name: jacoco-report
-
-      - name: Upload JaCoCo Coverage Report
-        uses: Madrapps/jacoco-report@v1.6.1
-        with:
-          path: jacocoTestReport.xml
+          paths: |
+            ${{ github.workspace }}/unitSim/build/reports/jacoco/test/jacocoTestReport.xml
           token: ${{ secrets.GITHUB_TOKEN }}
+          min-coverage-overall: 80 # Adjust this value as needed
+          min-coverage-changed-files: 90 # Adjust this value as needed
+
 
   notify-discord:
     name: Notify Discord
