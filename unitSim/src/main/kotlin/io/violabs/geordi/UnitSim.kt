@@ -89,7 +89,7 @@ abstract class UnitSim(
             expectCall = { expected = givenFn(objectProvider) }
         }
 
-        fun expectFromFileContent(filename: String, givenFn: (fileContent: String, props: DynamicProperties) -> T?) {
+        fun expectFromFileContent(filename: String, givenFn: (fileContentProvider: ProviderPair<String>) -> T?) {
             val fullFilename = filename.takeIf { testResourceFolder.isEmpty() } ?: "$testResourceFolder/$filename"
 
             val uri =
@@ -101,7 +101,7 @@ abstract class UnitSim(
 
             val content = File(uri).readText()
 
-            this.expect { givenFn(content, objectProvider) }
+            this.expect { givenFn(ProviderPair(content)) }
         }
 
         fun expectNull() = expect { null }
@@ -119,7 +119,7 @@ abstract class UnitSim(
             wheneverCall = { actual = whenFn(objectProvider) }
         }
 
-        fun wheneverWithFile(filename: String, whenFn: (file: File, props: DynamicProperties) -> T?) {
+        fun wheneverWithFile(filename: String, whenFn: (fileProvider: ProviderPair<File>) -> T?) {
             val fullFilename = filename.takeIf { testResourceFolder.isEmpty() } ?: "$testResourceFolder/$filename"
 
             val uri = this::class
@@ -128,9 +128,9 @@ abstract class UnitSim(
                 .getResource(fullFilename)
                 ?.toURI() ?: throw Exception("File not available $filename")
 
-            val content = File(uri)
+            val file = File(uri)
 
-            this.whenever { whenFn(content, objectProvider) }
+            this.whenever { whenFn(ProviderPair(file)) }
         }
 
         inline fun <reified U : Throwable> wheneverThrows(crossinline whenFn: (props: DynamicProperties) -> T) {
@@ -139,11 +139,11 @@ abstract class UnitSim(
 
         inline fun <reified U : Throwable> wheneverThrows(
             crossinline whenFn: (props: DynamicProperties) -> T,
-            crossinline and: (U, props: DynamicProperties) -> Unit
+            crossinline and: (itemProvider: ProviderPair<U>) -> Unit
         ) {
             wheneverCall = {
                 val item: U = assertFailsWith<U> { whenFn(objectProvider) }
-                and(item, objectProvider)
+                and(ProviderPair(item))
             }
         }
 
@@ -169,8 +169,8 @@ abstract class UnitSim(
             }
         }
 
-        fun teardown(tearDownFn: (props: DynamicProperties) -> Unit) {
-            this.tearDownCall = { tearDownFn(objectProvider) }
+        fun teardown(tearDownFn: MutableMap<String, Any?>.() -> Unit) {
+            this.tearDownCall = { tearDownFn(objectProvider.assign()) }
         }
 
         private fun processMocks() = debugLogging.logDebugMocks {
@@ -199,6 +199,12 @@ abstract class UnitSim(
             internal fun assign(): MutableMap<String, Any?> = properties
             operator fun get(key: String): Any? = properties[key]
         }
+
+        inner class ProviderPair<T>(val item: T) {
+            operator fun component1(): T = item
+            operator fun component2(): DynamicProperties = objectProvider
+        }
+
     }
 
 

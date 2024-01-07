@@ -133,11 +133,11 @@ class UnitSimTests {
             @Test
             fun `expectFromFileContent will process with a file provided full wheneverWithFile`() = test {
                 expectFromFileContent("simpleExample/simple_example_scenario.txt") {
-                    it.uppercase()
+                    it.item.uppercase()
                 }
 
                 wheneverWithFile("simpleExample/simple_example_expected.md") {
-                    it.readLines().last()
+                    it.item.readLines().last()
                 }
             }
 
@@ -154,11 +154,15 @@ class UnitSimTests {
             @Test
             fun `expectFromFileContent will process with a file provided full wheneverWithFile`() = test {
                 expectFromFileContent("simple_example_scenario.txt") {
-                    it.uppercase()
+                    val (content) = it
+
+                    content.uppercase()
                 }
 
                 wheneverWithFile("simple_example_expected.md") {
-                    it.readLines().last()
+                    val (file) = it
+
+                    file.readLines().last()
                 }
             }
 
@@ -166,9 +170,7 @@ class UnitSimTests {
             fun `missing throws an expected throws an exception`() {
                 assertThrows<Exception> {
                     test {
-                        expectFromFileContent("missing.txt") {
-                            it
-                        }
+                        expectFromFileContent("missing.txt") { it.toString() }
                     }
                 }
             }
@@ -211,8 +213,8 @@ class UnitSimTests {
         inner class WheneverTests : UnitSim() {
             @Test
             fun `wheneverWithFile throws an exception`() = test {
-                wheneverThrows<Exception>({ wheneverWithFile("missing.txt") {} }) {
-                    assert(it.message == "File not available missing.txt")
+                wheneverThrows<Exception>({ wheneverWithFile("missing.txt") { } }) {
+                    assert(it.item.message == "File not available missing.txt")
                 }
             }
         }
@@ -221,12 +223,12 @@ class UnitSimTests {
         @Nested
         inner class ThenTests : UnitSim() {
             @Test
-            fun `then processes assertion`() = test<String> {
+            fun `then processes assertion`() = test {
                 expect { "TEST ME" }
 
                 whenever { "test" }
 
-                then { expect: String?, actual ->
+                then { expect: String?, actual: String? ->
                     assert(expect != null)
                     assert(actual != null)
                     assert(expect!!.contains(actual!!.uppercase()))

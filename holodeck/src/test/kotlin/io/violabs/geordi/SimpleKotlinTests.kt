@@ -22,11 +22,22 @@ class SimpleKotlinTests : UnitSim() {
 
     @Test
     fun `bare minimum using all parts`() = test {
-        setup { this["greeting"] = "Hello Universe!" }
+        setup {
+            this["greeting"] = "Hello Universe!"
+            this["additional"] = "!!"
+        }
 
-        expect { "Hello Universe!" }
+        expect { "Hello Universe!" + it["additional"]  }
 
         whenever { Greeting(it).greeting.coax() }
+
+        then { expect: String?, actual: String? ->
+            expect?.contains(actual ?: "FAIL") ?: false
+        }
+
+        teardown {
+            this["additional"] = null
+        }
     }
 }
 
