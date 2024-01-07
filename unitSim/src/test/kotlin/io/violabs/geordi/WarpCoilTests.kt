@@ -102,7 +102,9 @@ class WarpCoilTests {
             every { context.parameter } returns parameter
             every { parameter.type } returns String::class.java
 
-            assertFalse(coil.resolveParameter(context, null))
+            assertThrows<ParameterResolutionException> {
+                coil.resolveParameter(context, null)
+            }
         }
 
         @Test
