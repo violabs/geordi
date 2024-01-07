@@ -83,7 +83,8 @@ class WarpDistributorIntegrationSim : UnitSim() {
                 SCENARIO_MAP["any"]!! to { ::`getAdditionalExtensions will provide any variable` },
                 SCENARIO_MAP["list"]!! to { ::`getAdditionalExtensions will provide list variable` },
                 SCENARIO_MAP["map"]!! to { ::`getAdditionalExtensions will provide map variable` },
-                SCENARIO_MAP["customClass"]!! to { ::`getAdditionalExtensions will provide customClass variable` }
+                SCENARIO_MAP["customClass"]!! to { ::`getAdditionalExtensions will provide customClass variable - #scenario` },
+                SimulationGroup.vars("value").with("test") to { ::`getAdditionalExtensions will provide without scenario` }
             )
         }
     }
@@ -280,8 +281,15 @@ class WarpDistributorIntegrationSim : UnitSim() {
     }
 
     @TestTemplate
-    fun `getAdditionalExtensions will provide customClass variable`(value: CustomClass) = test {
+    fun `getAdditionalExtensions will provide customClass variable - #scenario`(value: CustomClass) = test {
         expect { CustomClass("value") }
+
+        whenever { value.debug() }
+    }
+
+    @TestTemplate
+    fun `getAdditionalExtensions will provide without scenario`(value: String) = test {
+        expect { "test" }
 
         whenever { value.debug() }
     }

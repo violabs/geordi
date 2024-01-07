@@ -37,6 +37,8 @@ jobs:
           paths: |
             ${{ github.workspace }}/unitSim/build/reports/jacoco/test/jacocoTestReport.xml
           token: ${{ secrets.GITHUB_TOKEN }}
+          pass-emoji: ':sparkles:'
+          fail-emoji: ':fire:'
           min-coverage-overall: 80 # Adjust this value as needed
           min-coverage-changed-files: 95 # Adjust this value as needed
 

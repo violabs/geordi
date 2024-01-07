@@ -40,7 +40,7 @@ class WarpDriveEngine : TestTemplateInvocationContextProvider {
      * @throws Exception if no scenarios are found for the given test method.
      */
     override fun provideTestTemplateInvocationContexts(context: ExtensionContext?): Stream<TestTemplateInvocationContext> {
-        val methodName: String? = context?.requiredTestMethod?.name
+        val methodName: String = context?.requiredTestMethod?.name ?: throw Exception("No test method found")
 
         val objScenarios = SCENARIO_STORE[methodName]
 
@@ -54,7 +54,7 @@ class WarpDriveEngine : TestTemplateInvocationContextProvider {
             .content
             .asSequence()
             .filter(filterFn)
-            .map { WarpDistributor(it, methodName ?: "") }
+            .map { WarpDistributor(it, methodName) }
             .asStream()
     }
 
