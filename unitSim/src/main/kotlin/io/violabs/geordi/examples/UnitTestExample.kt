@@ -51,12 +51,12 @@ class UnitTestExample : UnitSim(testResourceFolder = "unitTestExample") {
      */
     @TestTemplate
     fun `show file based test`(scenarioFile: String, expectedFile: String) = test {
-        expectFromFileContent(expectedFile) { content ->
+        expectFromFileContent(expectedFile) { content, _ ->
             // transform the content here
             content
         }
 
-        wheneverWithFile(scenarioFile) { file ->
+        wheneverWithFile(scenarioFile) { file, _ ->
             // do something with the file here
             file.name
         }

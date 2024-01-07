@@ -75,7 +75,7 @@ abstract class UnitSim(
         internal var thenCall: () -> Unit = this::defaultThenEquals
         internal var tearDownCall: () -> Unit = {}
 
-        private val objectProvider: DynamicProperties = DynamicProperties()
+        val objectProvider: DynamicProperties = DynamicProperties()
 
         fun setup(setupFn: MutableMap<String, Any?>.() -> Unit) {
             this.setupCall = { setupFn(objectProvider.assign()) }
@@ -89,7 +89,7 @@ abstract class UnitSim(
             expectCall = { expected = givenFn(objectProvider) }
         }
 
-        fun expectFromFileContent(filename: String, givenFn: (fileContent: String) -> T?) {
+        fun expectFromFileContent(filename: String, givenFn: (fileContent: String, props: DynamicProperties) -> T?) {
             val fullFilename = filename.takeIf { testResourceFolder.isEmpty() } ?: "$testResourceFolder/$filename"
 
             val uri =
@@ -101,16 +101,16 @@ abstract class UnitSim(
 
             val content = File(uri).readText()
 
-            this.expect { givenFn(content) }
+            this.expect { givenFn(content, objectProvider) }
         }
 
         fun expectNull() = expect { null }
 
         fun T.expect() = expect { this }
 
-        fun setupMocks(mockSetupFn: () -> Unit) {
+        fun setupMocks(mockSetupFn: (props: DynamicProperties) -> Unit) {
             mockSetupCall = {
-                mockSetupFn()
+                mockSetupFn(objectProvider)
                 processMocks()
             }
         }
@@ -119,7 +119,7 @@ abstract class UnitSim(
             wheneverCall = { actual = whenFn(objectProvider) }
         }
 
-        fun wheneverWithFile(filename: String, whenFn: (file: File) -> T?) {
+        fun wheneverWithFile(filename: String, whenFn: (file: File, props: DynamicProperties) -> T?) {
             val fullFilename = filename.takeIf { testResourceFolder.isEmpty() } ?: "$testResourceFolder/$filename"
 
             val uri = this::class
@@ -130,20 +130,20 @@ abstract class UnitSim(
 
             val content = File(uri)
 
-            this.whenever { whenFn(content) }
+            this.whenever { whenFn(content, objectProvider) }
         }
 
-        inline fun <reified U : Throwable> wheneverThrows(crossinline whenFn: () -> T) {
-            wheneverCall = { assertFailsWith<U> { whenFn() } }
+        inline fun <reified U : Throwable> wheneverThrows(crossinline whenFn: (props: DynamicProperties) -> T) {
+            wheneverCall = { assertFailsWith<U> { whenFn(objectProvider) } }
         }
 
         inline fun <reified U : Throwable> wheneverThrows(
-            crossinline whenFn: () -> T,
-            crossinline and: (U) -> Unit
+            crossinline whenFn: (props: DynamicProperties) -> T,
+            crossinline and: (U, props: DynamicProperties) -> Unit
         ) {
             wheneverCall = {
-                val item: U = assertFailsWith<U> { whenFn() }
-                and(item)
+                val item: U = assertFailsWith<U> { whenFn(objectProvider) }
+                and(item, objectProvider)
             }
         }
 
@@ -153,9 +153,9 @@ abstract class UnitSim(
             }
         }
 
-        fun thenEquals(message: String, runnable: (() -> Unit)? = null) {
+        fun thenEquals(message: String, runnable: ((props: DynamicProperties) -> Unit)? = null) {
             thenCall = {
-                runnable?.invoke()
+                runnable?.invoke(objectProvider)
 
                 assert(expected == actual) {
                     debugLogging.logAssertion(expected, actual, message, useHorizontalLogs)
@@ -169,8 +169,8 @@ abstract class UnitSim(
             }
         }
 
-        fun teardown(tearDownFn: () -> Unit) {
-            this.tearDownCall = tearDownFn
+        fun teardown(tearDownFn: (props: DynamicProperties) -> Unit) {
+            this.tearDownCall = { tearDownFn(objectProvider) }
         }
 
         private fun processMocks() = debugLogging.logDebugMocks {
