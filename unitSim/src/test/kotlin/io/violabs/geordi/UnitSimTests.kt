@@ -4,11 +4,18 @@ import io.mockk.confirmVerified
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 
 class UnitSimTests {
     val debugLogging = mockk<DebugLogging>()
+
+    @AfterEach
+    fun teardown() {
+        // confirm no additional mocks are called
+        confirmVerified(debugLogging)
+    }
 
     @Test
     fun `mock will create mock of specified type`() {
@@ -19,8 +26,17 @@ class UnitSimTests {
         val mock = unitSim.testMock()
 
         assert("DebugLogging\$Subclass0" == mock::class.simpleName)
+    }
 
-        confirmVerified(debugLogging)
+    @Test
+    fun `every will create mock task`() {
+        val unitSim = object : UnitSim() {
+            fun testEvery(): MockTask<String> = every { "test" }
+        }
+
+        val mockTask = unitSim.testEvery()
+
+        assert(mockTask.mockCall.invoke() == "test")
     }
 
     @Nested
@@ -59,4 +75,51 @@ class UnitSimTests {
             confirmVerified(debugLogging)
         }
     }
+
+    @Nested
+    inner class StaticSetupTests {
+
+        @Test
+        fun `setup with provider will add scenario to the store`() {
+            val simulationGroup = SimulationGroup.vars("test")
+            val testClass = TestClass()
+
+            UnitSim.setup<TestClass> {
+                arrayOf(simulationGroup with ::`here is the method`)
+            }
+
+            val actual = WarpDriveEngine.SCENARIO_STORE[testClass::`here is the method`.name]
+
+            assert(actual == simulationGroup) {
+                """
+                    EXPECT: $simulationGroup
+                    ACTUAL: $actual
+                """.trimIndent()
+            }
+        }
+
+        @Test
+        fun `setup with method pairs will add scenario to the store`() {
+            val simulationGroup = SimulationGroup.vars("test")
+            val testClass = TestClass()
+
+            UnitSim.setup<TestClass>(
+                simulationGroup with { ::`here is a different method` }
+            )
+
+            val actual = WarpDriveEngine.SCENARIO_STORE[testClass::`here is a different method`.name]
+
+            assert(actual == simulationGroup) {
+                """
+                    EXPECT: $simulationGroup
+                    ACTUAL: $actual
+                """.trimIndent()
+            }
+        }
+    }
+}
+
+class TestClass {
+    fun `here is the method`(): String = "test"
+    fun `here is a different method`(): String = "test 2"
 }

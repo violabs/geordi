@@ -247,17 +247,17 @@ abstract class UnitSim(
     companion object {
 
 
-        inline fun <reified T> setup(provider: (T) -> Array<Pair<KFunction<*>, SimulationGroup>>) {
+        inline fun <reified T> setup(provider: T.() -> Array<Pair<SimulationGroup, KFunction<*>>>) {
             val refInstance: T = T::class.java.getDeclaredConstructor().newInstance()
 
-            provider(refInstance).forEach { (ref, scenarios) ->
+            provider(refInstance).forEach { (scenarios, ref) ->
                 val methodName = ref.name
 
                 WarpDriveEngine.SCENARIO_STORE[methodName] = scenarios
             }
         }
 
-        inline fun <reified T> setup(vararg methodPairs: Pair<SimulationGroup, (T) -> KFunction<*>>) {
+        inline fun <reified T> setup(vararg methodPairs: Pair<SimulationGroup, T.() -> KFunction<*>>) {
             val refInstance: T = T::class.java.getDeclaredConstructor().newInstance()
 
             methodPairs.forEach { (scenarios, nameFetcher) ->

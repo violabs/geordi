@@ -36,8 +36,8 @@ class UnitTestExample : UnitSim(testResourceFolder = "unitTestExample") {
         @JvmStatic
         @BeforeAll
         fun setup() = setup<UnitTestExample>(
-            FILE_BASED_SCENARIOS to { it::`show file based test` },
-            PARAMETER_BASED_SCENARIOS to { it::`show parameter based test` }
+            FILE_BASED_SCENARIOS to { ::`show file based test` },
+            PARAMETER_BASED_SCENARIOS to { ::`show parameter based test` }
         )
     }
 
