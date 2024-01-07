@@ -1,8 +1,6 @@
 package io.violabs.geordi
 
-import io.mockk.confirmVerified
-import io.mockk.mockkClass
-import io.mockk.verify
+import io.mockk.*
 import org.junit.jupiter.api.extension.ExtendWith
 import java.io.File
 import kotlin.reflect.KFunction
@@ -25,7 +23,7 @@ abstract class UnitSim(
     inline fun <reified T : Any> mock(): T = mockkClass(type = T::class)
 
     fun <T : Any> every(mockCall: () -> T?): MockTask<T> {
-        val task = MockTask(mockCall)
+        val task = MockTask(mockCall = mockCall)
         mockCalls.add(task)
         return task
     }
@@ -139,6 +137,16 @@ abstract class UnitSim(
             wheneverCall = { assertFailsWith<U> { whenFn() } }
         }
 
+        inline fun <reified U : Throwable> wheneverThrows(
+            crossinline whenFn: () -> T,
+            crossinline and: (U) -> Unit
+        ) {
+            wheneverCall = {
+                val item: U = assertFailsWith<U> { whenFn() }
+                and(item)
+            }
+        }
+
         fun then(thenFn: (T?, T?) -> Unit) {
             thenCall = {
                 thenFn(expected, actual)
@@ -222,7 +230,7 @@ abstract class UnitSim(
 
             runnables.logCalledCount()
 
-            callOnly.onEach { mockkEvery { it.mockCall.invoke() } }.logNullCount()
+            callOnly.onEach { mockkEvery { it.mockCall.invoke() } returns Unit }.logNullCount()
 
             returnable.onEach { mockkEvery { it.mockCall.invoke() } returns it.returnedItem!! }.logReturnedCount()
         }

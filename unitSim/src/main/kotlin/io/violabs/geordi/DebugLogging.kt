@@ -8,17 +8,18 @@ import kotlin.math.max
  *
  * Allows for storing, adding, and logging debug items, as well as logging debug metrics.
  */
+@ExcludeFromJacocoGeneratedReport
 interface DebugLogging {
     val debugItems: MutableMap<String, Any?>
 
     /**
      * Adds a debug item to the debug items map.
      *
-     * @param key A unique key for the debug item. Defaults to a random UUID string.
+     * @param key A unique key for the debug item.
      * @param value The value of the debug item.
      * @return The value passed in.
      */
-    fun <T> addDebugItem(key: String = UUID.randomUUID().toString(), value: T): T
+    fun <T> addDebugItem(key: String, value: T): T
 
     /**
      * Logs all the debug items stored in the debug items map.
@@ -57,6 +58,7 @@ internal const val DEBUG_DEFAULT_WIDTH = 26
 /**
  * Default implementation of the DebugLogging interface.
  */
+@ExcludeFromJacocoGeneratedReport
 internal class DefaultDebugLogging : DebugLogging {
     override val debugItems = mutableMapOf<String, Any?>()
     /**
@@ -149,6 +151,7 @@ internal class DefaultDebugLogging : DebugLogging {
     /**
      * Utility class for generating ASCII art style borders in debug logs.
      */
+    @ExcludeFromJacocoGeneratedReport
     class Border(
         val size: Int,
         val gap: String,

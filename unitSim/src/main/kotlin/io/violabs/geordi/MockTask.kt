@@ -1,9 +1,10 @@
 package io.violabs.geordi
 
+@ExcludeFromJacocoGeneratedReport
 class MockTask<T : Any>(
-    val mockCall: () -> T?,
     var returnedItem: T? = null,
-    var throwable: Throwable? = null
+    var throwable: Throwable? = null,
+    val mockCall: () -> T?
 ) {
 
     infix fun returns(returnItem: T) {

@@ -45,15 +45,15 @@ open class WarpCoil<T>(open val index: Int = -1, open val input: T) : ParameterR
      * @throws ParameterResolutionException if no parameter is found for the input.
      */
     override fun resolveParameter(parameterContext: ParameterContext?, extensionContext: ExtensionContext?): T {
-        val parameter = parameterContext?.parameter
-        val type = parameter?.type
-        val kType = type?.kotlin
-        val inKType = input!!::class
-        val typesAreSame = kType == inKType
 
-        if (typesAreSame) {
-            return input
+        val inKlass = input!!::class
+        val inJava = inKlass.java
+        val paramClass = parameterContext?.parameter?.type
+        val paramKlass = paramClass?.kotlin
+        if (paramKlass != inKlass && paramClass != inJava) {
+            throw ParameterResolutionException("No parameter found for input $input")
         }
-        throw ParameterResolutionException("No parameter found for input $input")
+
+        return input
     }
 }

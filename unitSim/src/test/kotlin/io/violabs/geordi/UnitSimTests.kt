@@ -174,11 +174,85 @@ class UnitSimTests {
             }
         }
 
-        // with mocks & without
+        // with mocks & throws
+        @Nested
+        inner class MockTests : UnitSim() {
+            private val service = mockk<GeordiMockCompositionService>()
 
-        // whenever && whenever with file && throws
+            private val target = GeordiMockTest(service)
+
+            @Test
+            fun `mock will process with provider`() = test {
+                expect { true }
+
+                setupMocks {
+                    every { service.supply() } returns "test"
+                    every { service.consume("test") }
+                    every { service.accept("test") } returns true
+                }
+
+                whenever { target.test() }
+            }
+
+            @Test
+            fun `mock throws`() = test {
+                setupMocks {
+                    every { service.supply() } throws Exception("test")
+                }
+
+                wheneverThrows<Exception> {
+                    target.test()
+                }
+            }
+        }
+
+        // whenever with file
+        @Nested
+        inner class WheneverTests : UnitSim() {
+            @Test
+            fun `wheneverWithFile throws an exception`() = test {
+                wheneverThrows<Exception>({ wheneverWithFile("missing.txt") {} }) {
+                    assert(it.message == "File not available missing.txt")
+                }
+            }
+        }
 
         // then default && then && then equals
+        @Nested
+        inner class ThenTests : UnitSim() {
+            @Test
+            fun `then processes assertion`() = test<String> {
+                expect { "TEST ME" }
+
+                whenever { "test" }
+
+                then { expect: String?, actual ->
+                    assert(expect != null)
+                    assert(actual != null)
+                    assert(expect!!.contains(actual!!.uppercase()))
+                }
+            }
+
+            @Test
+            fun `thenEquals assertion`() = test {
+                expect { "TEST" }
+
+                whenever { "test".uppercase() }
+
+                thenEquals("New message") {
+                    assert(true)
+                }
+            }
+
+            @Test
+            fun `defaultThenEquals assertion`() = test {
+                expect { "TEST" }
+
+                whenever { "test".uppercase() }
+
+                defaultThenEquals()
+            }
+        }
     }
 
     @Nested
@@ -187,13 +261,13 @@ class UnitSimTests {
         @Test
         fun `setup with provider will add scenario to the store`() {
             val simulationGroup = SimulationGroup.vars("test")
-            val testClass = TestClass()
+            val geordiTestClass = GeordiTestClass()
 
-            UnitSim.setup<TestClass> {
+            UnitSim.setup<GeordiTestClass> {
                 arrayOf(simulationGroup with ::`here is the method`)
             }
 
-            val actual = WarpDriveEngine.SCENARIO_STORE[testClass::`here is the method`.name]
+            val actual = WarpDriveEngine.SCENARIO_STORE[geordiTestClass::`here is the method`.name]
 
             assert(actual == simulationGroup) {
                 """
@@ -206,13 +280,13 @@ class UnitSimTests {
         @Test
         fun `setup with method pairs will add scenario to the store`() {
             val simulationGroup = SimulationGroup.vars("test")
-            val testClass = TestClass()
+            val geordiTestClass = GeordiTestClass()
 
-            UnitSim.setup<TestClass>(
+            UnitSim.setup<GeordiTestClass>(
                 simulationGroup with { ::`here is a different method` }
             )
 
-            val actual = WarpDriveEngine.SCENARIO_STORE[testClass::`here is a different method`.name]
+            val actual = WarpDriveEngine.SCENARIO_STORE[geordiTestClass::`here is a different method`.name]
 
             assert(actual == simulationGroup) {
                 """
@@ -224,7 +298,24 @@ class UnitSimTests {
     }
 }
 
-class TestClass {
+class GeordiTestClass {
     fun `here is the method`(): String = "test"
     fun `here is a different method`(): String = "test 2"
+}
+
+class GeordiMockTest(private val compositionService: GeordiMockCompositionService) {
+    fun test(): Boolean {
+        val string = compositionService.supply()
+        compositionService.consume(string)
+        return compositionService.accept(string)
+    }
+
+}
+
+interface GeordiMockCompositionService {
+    fun supply(): String
+
+    fun accept(inString: String): Boolean
+
+    fun consume(inString: String)
 }
