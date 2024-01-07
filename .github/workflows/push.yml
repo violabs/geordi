@@ -51,7 +51,7 @@ jobs:
       - name: Upload JaCoCo Coverage Report
         uses: Madrapps/jacoco-report@v1
         with:
-          path: geordi/unitSim/build/reports/jacoco/test/jacocoTestReport.xml
+          path: jacocoTestReport.xml
           token: ${{ secrets.GITHUB_TOKEN }}
 
   notify-discord:
