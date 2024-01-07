@@ -1,6 +1,6 @@
 # Geordi Test Framework
 
-![push](https://github.com/violabs/geordi/actions/workflows/push/badge.svg?branch=main)
+![push](https://github.com/violabs/geordi/actions/workflows/push.yml/badge.svg?branch=main)
 
 
 ## Introduction

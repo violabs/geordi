@@ -28,3 +28,11 @@ jobs:
             ${{ runner.os }}-gradle-
       - name: Run Gradle tests in unitSim
         run: ./gradlew :unitSim:test
+
+      - name: Send notification to Discord
+        if: always() # This ensures the step runs whether the previous steps succeeded or failed
+        run: |
+          curl -X POST \
+          -H "Content-Type: application/json" \
+          -d '{"content": "GitHub Actions notification - ${{ job.status }}"}' \
+          ${{ secrets.VIOLABS_DISCORD_PUBLIC_WEBHOOK }}
