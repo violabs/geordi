@@ -158,63 +158,15 @@ abstract class UnitSim(
                 runnable?.invoke()
 
                 assert(expected == actual) {
-                    println("FAILED $message")
-                    if (useHorizontalLogs) {
-                        println(makeHorizontalLogs())
-                    } else {
-                        println("EXPECT: $expected")
-                        println("ACTUAL: $actual")
-                    }
+                    debugLogging.logAssertion(expected, actual, message, useHorizontalLogs)
                 }
             }
         }
 
         fun defaultThenEquals() {
             assert(expected == actual) {
-                if (useHorizontalLogs) {
-                    println(makeHorizontalLogs())
-                } else {
-                    println("EXPECT: $expected")
-                    println("ACTUAL: $actual")
-                }
+                debugLogging.logAssertion(expected, actual, useHorizontalLogs = useHorizontalLogs)
             }
-        }
-
-        private fun List<String>.zipWithNulls(other: List<String>) = this.mapIndexed { index, e ->
-            val actual = other.getOrNull(index) ?: ""
-
-            e to actual
-        }
-
-        private fun List<Pair<String, String>>.alignContent(max: Int) = this.joinToString("\n") { (e, a) ->
-            val numberOfSpaces = max - e.length
-
-            val g = " ".repeat(numberOfSpaces + 4)
-
-            "$e$g$a"
-        }
-
-        private fun makeHorizontalLogs(): String {
-            val expectedLines = expected.toString().asLines()
-            val actualLines = actual.toString().asLines()
-
-            val zippedWithNulls = expectedLines.zipWithNulls(actualLines)
-
-            val max = expectedLines.maxOfOrNull(String::length) ?: 0
-
-            val based = zippedWithNulls.alignContent(max)
-
-            val expect = "EXPECT"
-            val actual = "ACTUAL"
-
-            val numberOfSpaces = max - expect.length + 4
-
-            val titleGap = " ".repeat(numberOfSpaces)
-
-            return """
-                |$expect$titleGap$actual
-                |$based
-            """.trimMargin()
         }
 
         fun teardown(tearDownFn: () -> Unit) {
@@ -251,8 +203,6 @@ abstract class UnitSim(
 
 
     companion object {
-
-
         inline fun <reified T> setup(provider: T.() -> Array<Pair<SimulationGroup, KFunction<*>>>) {
             val refInstance: T = T::class.java.getDeclaredConstructor().newInstance()
 

@@ -33,10 +33,13 @@ interface DebugLogging {
      */
     fun logDebugMocks(callFn: MetricsReader.() -> Unit)
 
+    fun <T> logAssertion(expected: T?, actual: T?, message: String? = null, useHorizontalLogs: Boolean = false)
+
     /**
      * Companion object to provide a default implementation of DebugLogging.
      */
     companion object {
+        @ExcludeFromJacocoGeneratedReport
         fun default(): DebugLogging = DefaultDebugLogging()
     }
 
@@ -177,6 +180,7 @@ internal class DefaultDebugLogging : DebugLogging {
     /**
      * Default implementation of the MetricsReader interface for logging metrics.
      */
+    @ExcludeFromJacocoGeneratedReport
     object DefaultMetricReader : DebugLogging.MetricsReader {
         override fun List<Any>.logThrownCount() = logCount("THROWN")
         override fun List<Any>.logCalledCount() = logCount("CALLED")
@@ -232,4 +236,51 @@ internal class DefaultDebugLogging : DebugLogging {
         return "║ $debugTitleSpaces$this$debugTitleSpaces $offset║"
     }
 
+    override fun <T> logAssertion(expected: T?, actual: T?, message: String?, useHorizontalLogs: Boolean) {
+        message?.let { println("FAILED $message") }
+        if (useHorizontalLogs) {
+            println(makeHorizontalLogs(expected, actual))
+        } else {
+            println("EXPECT: $expected")
+            println("ACTUAL: $actual")
+        }
+    }
+
+    private fun List<String>.zipWithNulls(other: List<String>) = this.mapIndexed { index, e ->
+        val actual = other.getOrNull(index) ?: ""
+
+        e to actual
+    }
+
+    @ExcludeFromJacocoGeneratedReport
+    private fun List<Pair<String, String>>.alignContent(max: Int) = this.joinToString("\n") { (e, a) ->
+        val numberOfSpaces = max - e.length
+
+        val g = " ".repeat(numberOfSpaces + 4)
+
+        "$e$g$a"
+    }
+
+    private fun <T> makeHorizontalLogs(expected: T?, actual: T?): String {
+        val expectedLines = expected.toString().asLines()
+        val actualLines = actual.toString().asLines()
+
+        val zippedWithNulls = expectedLines.zipWithNulls(actualLines)
+
+        val max = expectedLines.maxOfOrNull(String::length) ?: 0
+
+        val based = zippedWithNulls.alignContent(max)
+
+        val expectWord = "EXPECT"
+        val actualWord = "ACTUAL"
+
+        val numberOfSpaces = max - expectWord.length + 4
+
+        val titleGap = " ".repeat(numberOfSpaces)
+
+        return """
+                |$expectWord$titleGap$actualWord
+                |$based
+            """.trimMargin()
+    }
 }

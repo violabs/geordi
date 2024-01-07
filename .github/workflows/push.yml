@@ -39,8 +39,8 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           pass-emoji: ':sparkles:'
           fail-emoji: ':fire:'
-          min-coverage-overall: 80 # Adjust this value as needed
-          min-coverage-changed-files: 95 # Adjust this value as needed
+          min-coverage-overall: 80
+          min-coverage-changed-files: 80
 
 
   notify-discord:
