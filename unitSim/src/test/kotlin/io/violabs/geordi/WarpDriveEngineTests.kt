@@ -66,7 +66,7 @@ class WarpDriveEngineTests {
 
         val simulationGroup = SimulationGroup.vars("scenario", "b", "c")
             .with("first", 2, 3)
-            .with("second", 5, 6)
+            .with("second", 5, 6).ignore()
             .with(null, 5, 6)
 
         WarpDriveEngine.SCENARIO_STORE[methodName] = simulationGroup
