@@ -38,7 +38,7 @@ jobs:
             ${{ github.workspace }}/unitSim/build/reports/jacoco/test/jacocoTestReport.xml
           token: ${{ secrets.GITHUB_TOKEN }}
           min-coverage-overall: 80 # Adjust this value as needed
-          min-coverage-changed-files: 90 # Adjust this value as needed
+          min-coverage-changed-files: 95 # Adjust this value as needed
 
 
   notify-discord:
