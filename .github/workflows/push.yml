@@ -29,6 +29,13 @@ jobs:
             ${{ runner.os }}-gradle-
       - name: Run Gradle tests in unitSim
         run: ./gradlew :unitSim:test
+      - name: Upload Jacoco Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: jacoco-report
+          path: geordi/unitSim/build/reports/jacoco/test/jacocoTestReport.xml
+
+
 
   coverage-report:
     name: Coverage Report
@@ -36,6 +43,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - name: Download Jacoco Report
+        uses: actions/download-artifact@v3
+        with:
+          name: jacoco-report
 
       - name: Upload JaCoCo Coverage Report
         uses: Madrapps/jacoco-report@v1
