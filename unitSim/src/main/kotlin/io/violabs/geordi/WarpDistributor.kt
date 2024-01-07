@@ -1,6 +1,7 @@
 package io.violabs.geordi
 
 import org.junit.jupiter.api.extension.Extension
+import org.junit.jupiter.api.extension.ParameterResolver
 import org.junit.jupiter.api.extension.TestTemplateInvocationContext
 import kotlin.reflect.KClass
 
@@ -51,36 +52,45 @@ class WarpDistributor(
      * @return A mutable list of [Extension] objects required for the test context.
      */
     override fun getAdditionalExtensions(): MutableList<Extension> {
-        val mainList: MutableList<Extension> = mutableListOf()
+        val hasScenario = HasScenario(entry.key == "scenario")
 
-        var indexModifier = 1
-
-        val parsedExtensions = entry
+        return entry
             .value
             .content
             .entries
-            .mapIndexed { i, entry ->
-                if (entry.key == "scenario") {
-                    indexModifier = -1
-                    return@mapIndexed null
-                }
-
-                val value = entry.value
-                val index = i + indexModifier
-
-                if (value == null) {
-                    return@mapIndexed PositionCoil(index, null)
-                }
-
-                when(value) {
-                    is Map<*, *> -> PositionCoil(index, value)
-                    is List<*> -> PositionCoil(index, value)
-                    is KClass<*> -> PositionCoil(index, value)
-                    else -> WarpCoil(index, value)
-                }
-            }
+            .mapIndexed { i, entry -> determineCoilForParameter(i, entry, hasScenario) }
             .filterNotNull()
+            .toMutableList()
+    }
 
-        return (mainList + parsedExtensions).toMutableList()
+    private class HasScenario(private var hasScenario: Boolean)  {
+        fun indexModifier(): Int = if (hasScenario) -1 else 0
+
+        fun yes() {
+            this.hasScenario = true
+        }
+    }
+
+    private fun determineCoilForParameter(
+        i: Int,
+        entry: Map.Entry<String, Any?>,
+        hasScenario: HasScenario
+    ): ParameterResolver? {
+        if (entry.key == "scenario") {
+            hasScenario.yes()
+            return null
+        }
+
+        val value = entry.value
+        val index = i + hasScenario.indexModifier()
+
+        if (value == null) return PositionCoil(index, null)
+
+        return when(value) {
+            is Map<*, *> -> PositionCoil(index, value)
+            is List<*> -> PositionCoil(index, value)
+            is KClass<*> -> PositionCoil(index, value)
+            else -> WarpCoil(index, value)
+        }
     }
 }

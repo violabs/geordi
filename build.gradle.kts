@@ -19,7 +19,6 @@ allprojects {
 
 subprojects {
     apply {
-//        plugin("kotlin")
         plugin("org.jetbrains.kotlin.jvm")
     }
 
@@ -32,3 +31,5 @@ subprojects {
 kotlin {
     jvmToolchain(20)
 }
+
+
