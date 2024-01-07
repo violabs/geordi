@@ -5,7 +5,6 @@ import io.mockk.mockkClass
 import io.mockk.verify
 import org.junit.jupiter.api.extension.ExtendWith
 import java.io.File
-import java.util.UUID
 import kotlin.reflect.KFunction
 import kotlin.reflect.KProperty
 import kotlin.test.assertFailsWith
