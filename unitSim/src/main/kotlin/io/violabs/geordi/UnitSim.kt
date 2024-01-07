@@ -1,8 +1,6 @@
 package io.violabs.geordi
 
-import io.mockk.confirmVerified
-import io.mockk.mockkClass
-import io.mockk.verify
+import io.mockk.*
 import org.junit.jupiter.api.extension.ExtendWith
 import java.io.File
 import kotlin.reflect.KFunction
@@ -14,7 +12,7 @@ import io.mockk.every as mockkEvery
 abstract class UnitSim(
     protected val testResourceFolder: String = "",
     private val debugLogging: DebugLogging = DebugLogging.default(),
-    private val debugEnabled: Boolean = true
+    private val debugEnabled: Boolean = true,
 ) {
     private val mocks: MutableList<Any> = mutableListOf()
     private val mockCalls = mutableListOf<MockTask<*>>()
@@ -25,7 +23,7 @@ abstract class UnitSim(
     inline fun <reified T : Any> mock(): T = mockkClass(type = T::class)
 
     fun <T : Any> every(mockCall: () -> T?): MockTask<T> {
-        val task = MockTask(mockCall)
+        val task = MockTask(mockCall = mockCall)
         mockCalls.add(task)
         return task
     }
@@ -76,21 +74,22 @@ abstract class UnitSim(
         var wheneverCall: () -> Unit = {}
         internal var thenCall: () -> Unit = this::defaultThenEquals
         internal var tearDownCall: () -> Unit = {}
-        private var expectedExists = false
 
-        private val objectProvider: DynamicProperties = DynamicProperties()
+        val objectProvider: DynamicProperties = DynamicProperties()
 
         fun setup(setupFn: MutableMap<String, Any?>.() -> Unit) {
             this.setupCall = { setupFn(objectProvider.assign()) }
         }
 
-        fun expect(givenFn: () -> T?) {
-            if (expectedExists) throw Exception("Can only have expect or given and not both!!")
-            expectedExists = true
-            expectCall = { expected = givenFn() }
+        fun given(setupFn: MutableMap<String, Any?>.() -> Unit) {
+            this.setupCall = { setupFn(objectProvider.assign()) }
         }
 
-        fun expectFromFileContent(filename: String, givenFn: (fileContent: String) -> T?) {
+        fun expect(givenFn: (DynamicProperties) -> T?) {
+            expectCall = { expected = givenFn(objectProvider) }
+        }
+
+        fun expectFromFileContent(filename: String, givenFn: (fileContentProvider: ProviderPair<String>) -> T?) {
             val fullFilename = filename.takeIf { testResourceFolder.isEmpty() } ?: "$testResourceFolder/$filename"
 
             val uri =
@@ -102,20 +101,16 @@ abstract class UnitSim(
 
             val content = File(uri).readText()
 
-            this.expect { givenFn(content) }
+            this.expect { givenFn(ProviderPair(content)) }
         }
 
         fun expectNull() = expect { null }
 
-        fun given(givenFn: () -> T?) {
-            if (expectedExists) throw Exception("Can only have expect or given and not both!!")
-            expectedExists = true
-            expectCall = { expected = givenFn() }
-        }
+        fun T.expect() = expect { this }
 
-        fun setupMocks(mockSetupFn: () -> Unit) {
+        fun setupMocks(mockSetupFn: (props: DynamicProperties) -> Unit) {
             mockSetupCall = {
-                mockSetupFn()
+                mockSetupFn(objectProvider)
                 processMocks()
             }
         }
@@ -124,7 +119,7 @@ abstract class UnitSim(
             wheneverCall = { actual = whenFn(objectProvider) }
         }
 
-        fun wheneverWithFile(filename: String, whenFn: (file: File) -> T?) {
+        fun wheneverWithFile(filename: String, whenFn: (fileProvider: ProviderPair<File>) -> T?) {
             val fullFilename = filename.takeIf { testResourceFolder.isEmpty() } ?: "$testResourceFolder/$filename"
 
             val uri = this::class
@@ -133,13 +128,23 @@ abstract class UnitSim(
                 .getResource(fullFilename)
                 ?.toURI() ?: throw Exception("File not available $filename")
 
-            val content = File(uri)
+            val file = File(uri)
 
-            this.whenever { whenFn(content) }
+            this.whenever { whenFn(ProviderPair(file)) }
         }
 
-        inline fun <reified U : Throwable> wheneverThrows(crossinline whenFn: () -> T) {
-            wheneverCall = { assertFailsWith<U> { whenFn() } }
+        inline fun <reified U : Throwable> wheneverThrows(crossinline whenFn: (props: DynamicProperties) -> T) {
+            wheneverCall = { assertFailsWith<U> { whenFn(objectProvider) } }
+        }
+
+        inline fun <reified U : Throwable> wheneverThrows(
+            crossinline whenFn: (props: DynamicProperties) -> T,
+            crossinline and: (itemProvider: ProviderPair<U>) -> Unit
+        ) {
+            wheneverCall = {
+                val item: U = assertFailsWith<U> { whenFn(objectProvider) }
+                and(ProviderPair(item))
+            }
         }
 
         fun then(thenFn: (T?, T?) -> Unit) {
@@ -148,72 +153,24 @@ abstract class UnitSim(
             }
         }
 
-        fun thenEquals(message: String, runnable: (() -> Unit)? = null) {
+        fun thenEquals(message: String, runnable: ((props: DynamicProperties) -> Unit)? = null) {
             thenCall = {
-                runnable?.invoke()
+                runnable?.invoke(objectProvider)
 
                 assert(expected == actual) {
-                    println("FAILED $message")
-                    if (useHorizontalLogs) {
-                        println(makeHorizontalLogs())
-                    } else {
-                        println("EXPECT: $expected")
-                        println("ACTUAL: $actual")
-                    }
+                    debugLogging.logAssertion(expected, actual, message, useHorizontalLogs)
                 }
             }
         }
 
         fun defaultThenEquals() {
             assert(expected == actual) {
-                if (useHorizontalLogs) {
-                    println(makeHorizontalLogs())
-                } else {
-                    println("EXPECT: $expected")
-                    println("ACTUAL: $actual")
-                }
+                debugLogging.logAssertion(expected, actual, useHorizontalLogs = useHorizontalLogs)
             }
         }
 
-        private fun List<String>.zipWithNulls(other: List<String>) = this.mapIndexed { index, e ->
-            val actual = other.getOrNull(index) ?: ""
-
-            e to actual
-        }
-
-        private fun List<Pair<String, String>>.alignContent(max: Int) = this.joinToString("\n") { (e, a) ->
-            val numberOfSpaces = max - e.length
-
-            val g = " ".repeat(numberOfSpaces + 4)
-
-            "$e$g$a"
-        }
-
-        private fun makeHorizontalLogs(): String {
-            val expectedLines = expected.toString().asLines()
-            val actualLines = actual.toString().asLines()
-
-            val zippedWithNulls = expectedLines.zipWithNulls(actualLines)
-
-            val max = expectedLines.maxOfOrNull(String::length) ?: 0
-
-            val based = zippedWithNulls.alignContent(max)
-
-            val expect = "EXPECT"
-            val actual = "ACTUAL"
-
-            val numberOfSpaces = max - expect.length + 4
-
-            val titleGap = " ".repeat(numberOfSpaces)
-
-            return """
-                |$expect$titleGap$actual
-                |$based
-            """.trimMargin()
-        }
-
-        fun teardown(tearDownFn: () -> Unit) {
-            this.tearDownCall = tearDownFn
+        fun teardown(tearDownFn: MutableMap<String, Any?>.() -> Unit) {
+            this.tearDownCall = { tearDownFn(objectProvider.assign()) }
         }
 
         private fun processMocks() = debugLogging.logDebugMocks {
@@ -225,7 +182,7 @@ abstract class UnitSim(
 
             runnables.logCalledCount()
 
-            callOnly.onEach { mockkEvery { it.mockCall.invoke() } }.logNullCount()
+            callOnly.onEach { mockkEvery { it.mockCall.invoke() } returns Unit }.logNullCount()
 
             returnable.onEach { mockkEvery { it.mockCall.invoke() } returns it.returnedItem!! }.logReturnedCount()
         }
@@ -240,22 +197,29 @@ abstract class UnitSim(
             }
 
             internal fun assign(): MutableMap<String, Any?> = properties
+            operator fun get(key: String): Any? = properties[key]
         }
+
+        inner class ProviderPair<T>(val item: T) {
+            operator fun component1(): T = item
+            operator fun component2(): DynamicProperties = objectProvider
+        }
+
     }
 
 
     companion object {
-        inline fun <reified T> setup(provider: (T) -> Array<Pair<KFunction<*>, SimulationGroup>>) {
+        inline fun <reified T> setup(provider: T.() -> Array<Pair<SimulationGroup, KFunction<*>>>) {
             val refInstance: T = T::class.java.getDeclaredConstructor().newInstance()
 
-            provider(refInstance).forEach { (ref, scenarios) ->
+            provider(refInstance).forEach { (scenarios, ref) ->
                 val methodName = ref.name
 
                 WarpDriveEngine.SCENARIO_STORE[methodName] = scenarios
             }
         }
 
-        inline fun <reified T> setup(vararg methodPairs: Pair<SimulationGroup, (T) -> KFunction<*>>) {
+        inline fun <reified T> setup(vararg methodPairs: Pair<SimulationGroup, T.() -> KFunction<*>>) {
             val refInstance: T = T::class.java.getDeclaredConstructor().newInstance()
 
             methodPairs.forEach { (scenarios, nameFetcher) ->

@@ -1,8 +1,10 @@
-package io.violabs.geordi
+package io.violabs.geordi.examples
 
+import io.violabs.geordi.*
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.TestTemplate
 import java.time.LocalDate
+
 
 /**
  * Defines file-based scenarios for testing.
@@ -22,6 +24,7 @@ private val PARAMETER_BASED_SCENARIOS = SimulationGroup
     .with("geordi",   "Geordi LaForge",  LocalDate.now(),                             4)
     .with("beverly",  "Beverly Crusher", LocalDate.now().minusYears(1), 5)
 
+
 /**
  * A test class that extends from UnitSim to utilize its testing capabilities.
  * This class uses custom scenarios for testing.
@@ -36,8 +39,8 @@ class UnitTestExample : UnitSim(testResourceFolder = "unitTestExample") {
         @JvmStatic
         @BeforeAll
         fun setup() = setup<UnitTestExample>(
-            FILE_BASED_SCENARIOS to { it::`show file based test` },
-            PARAMETER_BASED_SCENARIOS to { it::`show parameter based test` }
+            FILE_BASED_SCENARIOS to { ::`show file based test` },
+            PARAMETER_BASED_SCENARIOS to { ::`show parameter based test` }
         )
     }
 
@@ -48,14 +51,14 @@ class UnitTestExample : UnitSim(testResourceFolder = "unitTestExample") {
      */
     @TestTemplate
     fun `show file based test`(scenarioFile: String, expectedFile: String) = test {
-        expectFromFileContent(expectedFile) { content ->
+        expectFromFileContent(expectedFile) {
             // transform the content here
-            content
+            it.item
         }
 
-        wheneverWithFile(scenarioFile) { file ->
+        wheneverWithFile(scenarioFile) {
             // do something with the file here
-            file.name
+            it.item
         }
     }
 

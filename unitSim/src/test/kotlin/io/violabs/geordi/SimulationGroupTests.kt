@@ -132,4 +132,23 @@ class SimulationGroupTests {
             """.trimIndent()
         }
     }
+
+    @Test
+    fun `toString returns correct string`() {
+        val simulationGroup = SimulationGroup
+            .vars("scenario", "b", "c"  )
+            .with("first"    ,  2 ,  3   ).isolate()
+
+        val string = simulationGroup.toString()
+
+        val expected = "{first=Scenario(content={scenario=first, b=2, c=3})}"
+
+        assert(string == expected) {
+            """
+                |
+                |EXPECT: $expected
+                |ACTUAL: $string
+            """.trimMargin()
+        }
+    }
 }

@@ -21,7 +21,7 @@ class WarpDistributor(
 
     // A message describing the scenario, initially set to the method name
     // but can be modified based on the scenario.
-    private var scenarioMessage: String? = methodName
+    private var scenarioMessage: String = methodName
 
     /**
      * Generates a display name for the test invocation.
@@ -35,12 +35,10 @@ class WarpDistributor(
      */
     override fun getDisplayName(invocationIndex: Int): String {
         if (methodName.contains("#scenario")) {
-            scenarioMessage = scenarioMessage
-                ?.replace("#scenario", entry.key)
-                ?: throw Exception("Scenario message is null")
+            scenarioMessage = scenarioMessage.replace("#scenario", entry.key)
         }
 
-        return scenarioMessage ?: methodName
+        return scenarioMessage
     }
 
     /**

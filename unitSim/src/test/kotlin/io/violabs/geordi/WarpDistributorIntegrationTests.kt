@@ -56,34 +56,35 @@ class WarpDistributorIntegrationSim : UnitSim() {
         @BeforeAll
         fun setup() {
             setup<WarpDistributorIntegrationSim>(
-                SCENARIO_MAP["string"]!! to { it::`getAdditionalExtensions will provide string variable` },
-                SCENARIO_MAP["boolean"]!! to { it::`getAdditionalExtensions will provide boolean variable` },
-                SCENARIO_MAP["byte"]!! to { it::`getAdditionalExtensions will provide byte variable` },
-                SCENARIO_MAP["short"]!! to { it::`getAdditionalExtensions will provide short variable` },
-                SCENARIO_MAP["int"]!! to { it::`getAdditionalExtensions will provide int variable` },
-                SCENARIO_MAP["long"]!! to { it::`getAdditionalExtensions will provide long variable` },
-                SCENARIO_MAP["float"]!! to { it::`getAdditionalExtensions will provide float variable` },
-                SCENARIO_MAP["double"]!! to { it::`getAdditionalExtensions will provide double variable` },
-                SCENARIO_MAP["char"]!! to { it::`getAdditionalExtensions will provide char variable` },
-                SCENARIO_MAP["byteArray"]!! to { it::`getAdditionalExtensions will provide byteArray variable` },
-                SCENARIO_MAP["charArray"]!! to { it::`getAdditionalExtensions will provide charArray variable` },
-                SCENARIO_MAP["intArray"]!! to { it::`getAdditionalExtensions will provide intArray variable` },
-                SCENARIO_MAP["longArray"]!! to { it::`getAdditionalExtensions will provide longArray variable` },
-                SCENARIO_MAP["shortArray"]!! to { it::`getAdditionalExtensions will provide shortArray variable` },
-                SCENARIO_MAP["floatArray"]!! to { it::`getAdditionalExtensions will provide floatArray variable` },
-                SCENARIO_MAP["doubleArray"]!! to { it::`getAdditionalExtensions will provide doubleArray variable` },
-                SCENARIO_MAP["booleanArray"]!! to { it::`getAdditionalExtensions will provide booleanArray variable` },
-                SCENARIO_MAP["stringArray"]!! to { it::`getAdditionalExtensions will provide stringArray variable` },
-                SCENARIO_MAP["genericArray"]!! to { it::`getAdditionalExtensions will provide genericArray variable` },
-                SCENARIO_MAP["throwable"]!! to { it::`getAdditionalExtensions will provide throwable variable` },
-                SCENARIO_MAP["null"]!! to { it::`getAdditionalExtensions will provide null variable` },
-                SCENARIO_MAP["class"]!! to { it::`getAdditionalExtensions will provide class variable` },
-                SCENARIO_MAP["klass"]!! to { it::`getAdditionalExtensions will provide klass variable` },
-                SCENARIO_MAP["enum"]!! to { it::`getAdditionalExtensions will provide enum variable` },
-                SCENARIO_MAP["any"]!! to { it::`getAdditionalExtensions will provide any variable` },
-                SCENARIO_MAP["list"]!! to { it::`getAdditionalExtensions will provide list variable` },
-                SCENARIO_MAP["map"]!! to { it::`getAdditionalExtensions will provide map variable` },
-                SCENARIO_MAP["customClass"]!! to { it::`getAdditionalExtensions will provide customClass variable` }
+                SCENARIO_MAP["string"]!! to { ::`getAdditionalExtensions will provide string variable` },
+                SCENARIO_MAP["boolean"]!! to { ::`getAdditionalExtensions will provide boolean variable` },
+                SCENARIO_MAP["byte"]!! to { ::`getAdditionalExtensions will provide byte variable` },
+                SCENARIO_MAP["short"]!! to { ::`getAdditionalExtensions will provide short variable` },
+                SCENARIO_MAP["int"]!! to { ::`getAdditionalExtensions will provide int variable` },
+                SCENARIO_MAP["long"]!! to { ::`getAdditionalExtensions will provide long variable` },
+                SCENARIO_MAP["float"]!! to { ::`getAdditionalExtensions will provide float variable` },
+                SCENARIO_MAP["double"]!! to { ::`getAdditionalExtensions will provide double variable` },
+                SCENARIO_MAP["char"]!! to { ::`getAdditionalExtensions will provide char variable` },
+                SCENARIO_MAP["byteArray"]!! to { ::`getAdditionalExtensions will provide byteArray variable` },
+                SCENARIO_MAP["charArray"]!! to { ::`getAdditionalExtensions will provide charArray variable` },
+                SCENARIO_MAP["intArray"]!! to { ::`getAdditionalExtensions will provide intArray variable` },
+                SCENARIO_MAP["longArray"]!! to { ::`getAdditionalExtensions will provide longArray variable` },
+                SCENARIO_MAP["shortArray"]!! to { ::`getAdditionalExtensions will provide shortArray variable` },
+                SCENARIO_MAP["floatArray"]!! to { ::`getAdditionalExtensions will provide floatArray variable` },
+                SCENARIO_MAP["doubleArray"]!! to { ::`getAdditionalExtensions will provide doubleArray variable` },
+                SCENARIO_MAP["booleanArray"]!! to { ::`getAdditionalExtensions will provide booleanArray variable` },
+                SCENARIO_MAP["stringArray"]!! to { ::`getAdditionalExtensions will provide stringArray variable` },
+                SCENARIO_MAP["genericArray"]!! to { ::`getAdditionalExtensions will provide genericArray variable` },
+                SCENARIO_MAP["throwable"]!! to { ::`getAdditionalExtensions will provide throwable variable` },
+                SCENARIO_MAP["null"]!! to { ::`getAdditionalExtensions will provide null variable` },
+                SCENARIO_MAP["class"]!! to { ::`getAdditionalExtensions will provide class variable` },
+                SCENARIO_MAP["klass"]!! to { ::`getAdditionalExtensions will provide klass variable` },
+                SCENARIO_MAP["enum"]!! to { ::`getAdditionalExtensions will provide enum variable` },
+                SCENARIO_MAP["any"]!! to { ::`getAdditionalExtensions will provide any variable` },
+                SCENARIO_MAP["list"]!! to { ::`getAdditionalExtensions will provide list variable` },
+                SCENARIO_MAP["map"]!! to { ::`getAdditionalExtensions will provide map variable` },
+                SCENARIO_MAP["customClass"]!! to { ::`getAdditionalExtensions will provide customClass variable - #scenario` },
+                SimulationGroup.vars("value").with("test") to { ::`getAdditionalExtensions will provide without scenario` }
             )
         }
     }
@@ -280,8 +281,15 @@ class WarpDistributorIntegrationSim : UnitSim() {
     }
 
     @TestTemplate
-    fun `getAdditionalExtensions will provide customClass variable`(value: CustomClass) = test {
+    fun `getAdditionalExtensions will provide customClass variable - #scenario`(value: CustomClass) = test {
         expect { CustomClass("value") }
+
+        whenever { value.debug() }
+    }
+
+    @TestTemplate
+    fun `getAdditionalExtensions will provide without scenario`(value: String) = test {
+        expect { "test" }
 
         whenever { value.debug() }
     }
