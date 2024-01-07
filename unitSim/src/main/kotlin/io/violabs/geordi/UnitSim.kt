@@ -14,7 +14,7 @@ import io.mockk.every as mockkEvery
 abstract class UnitSim(
     protected val testResourceFolder: String = "",
     private val debugLogging: DebugLogging = DebugLogging.default(),
-    private val debugEnabled: Boolean = true
+    private val debugEnabled: Boolean = true,
 ) {
     private val mocks: MutableList<Any> = mutableListOf()
     private val mockCalls = mutableListOf<MockTask<*>>()
@@ -245,6 +245,8 @@ abstract class UnitSim(
 
 
     companion object {
+
+
         inline fun <reified T> setup(provider: (T) -> Array<Pair<KFunction<*>, SimulationGroup>>) {
             val refInstance: T = T::class.java.getDeclaredConstructor().newInstance()
 

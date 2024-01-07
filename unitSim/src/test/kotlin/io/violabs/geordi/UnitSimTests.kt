@@ -10,6 +10,19 @@ import org.junit.jupiter.api.Test
 class UnitSimTests {
     val debugLogging = mockk<DebugLogging>()
 
+    @Test
+    fun `mock will create mock of specified type`() {
+        val unitSim = object : UnitSim() {
+            fun testMock(): DebugLogging = mock()
+        }
+
+        val mock = unitSim.testMock()
+
+        assert("DebugLogging\$Subclass0" == mock::class.simpleName)
+
+        confirmVerified(debugLogging)
+    }
+
     @Nested
     inner class DebugItemAddTests {
         @Test
