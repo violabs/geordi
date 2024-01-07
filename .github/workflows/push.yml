@@ -41,7 +41,7 @@ jobs:
         uses: Madrapps/jacoco-report@v1
         with:
           path: geordi/unitSim/build/reports/jacoco/test/jacocoTestReport.xml
-          github: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
   notify-discord:
     name: Notify Discord
