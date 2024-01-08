@@ -49,6 +49,7 @@ jobs:
     needs: unit-sim
     if: always()
     steps:
+      - uses: actions/checkout@v3
       - name: Send formatted notification to Discord
         env:
           JOB_STATUS: ${{ needs.unit-sim.result }}
