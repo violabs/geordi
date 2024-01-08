@@ -214,7 +214,13 @@ class UnitSimTests {
             @Test
             fun `wheneverWithFile throws an exception`() = test {
                 wheneverThrows<Exception>({ wheneverWithFile("missing.txt") { } }) {
-                    assert(it.item.message == "File not available missing.txt")
+                    assert(it.item.message == "File not found: missing.txt") {
+                        """
+                            
+                            EXPECT: File not available missing.txt
+                            ACTUAL: ${it.item.message}
+                        """.trimIndent()
+                    }
                 }
             }
         }
