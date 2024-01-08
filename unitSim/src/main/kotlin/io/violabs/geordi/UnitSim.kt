@@ -75,7 +75,7 @@ abstract class UnitSim(
         internal var thenCall: () -> Unit = this::defaultThenEquals
         internal var tearDownCall: () -> Unit = {}
 
-        val objectProvider: DynamicProperties = DynamicProperties()
+        val objectProvider: DynamicProperties<T> = DynamicProperties()
 
         fun setup(setupFn: MutableMap<String, Any?>.() -> Unit) {
             this.setupCall = { setupFn(objectProvider.assign()) }
@@ -85,8 +85,11 @@ abstract class UnitSim(
             this.setupCall = { setupFn(objectProvider.assign()) }
         }
 
-        fun expect(givenFn: (DynamicProperties) -> T?) {
-            expectCall = { expected = givenFn(objectProvider) }
+        fun expect(givenFn: (DynamicProperties<T>) -> T?) {
+            expectCall = {
+                expected = givenFn(objectProvider)
+                objectProvider.expected = expected
+            }
         }
 
         fun expectFromFileContent(filename: String, givenFn: (fileContentProvider: ProviderPair<String>) -> T?) {
@@ -108,14 +111,14 @@ abstract class UnitSim(
 
         fun T.expect() = expect { this }
 
-        fun setupMocks(mockSetupFn: (props: DynamicProperties) -> Unit) {
+        fun setupMocks(mockSetupFn: (props: DynamicProperties<T>) -> Unit) {
             mockSetupCall = {
                 mockSetupFn(objectProvider)
                 processMocks()
             }
         }
 
-        fun whenever(whenFn: (DynamicProperties) -> T?) {
+        fun whenever(whenFn: (DynamicProperties<T>) -> T?) {
             wheneverCall = { actual = whenFn(objectProvider) }
         }
 
@@ -133,12 +136,12 @@ abstract class UnitSim(
             this.whenever { whenFn(ProviderPair(file)) }
         }
 
-        inline fun <reified U : Throwable> wheneverThrows(crossinline whenFn: (props: DynamicProperties) -> T) {
+        inline fun <reified U : Throwable> wheneverThrows(crossinline whenFn: (props: DynamicProperties<T>) -> T) {
             wheneverCall = { assertFailsWith<U> { whenFn(objectProvider) } }
         }
 
         inline fun <reified U : Throwable> wheneverThrows(
-            crossinline whenFn: (props: DynamicProperties) -> T,
+            crossinline whenFn: (props: DynamicProperties<T>) -> T,
             crossinline and: (itemProvider: ProviderPair<U>) -> Unit
         ) {
             wheneverCall = {
@@ -153,7 +156,7 @@ abstract class UnitSim(
             }
         }
 
-        fun thenEquals(message: String, runnable: ((props: DynamicProperties) -> Unit)? = null) {
+        fun thenEquals(message: String, runnable: ((props: DynamicProperties<T>) -> Unit)? = null) {
             thenCall = {
                 runnable?.invoke(objectProvider)
 
@@ -187,8 +190,9 @@ abstract class UnitSim(
             returnable.onEach { mockkEvery { it.mockCall.invoke() } returns it.returnedItem!! }.logReturnedCount()
         }
 
-        inner class DynamicProperties {
+        inner class DynamicProperties<T> {
             private val properties = mutableMapOf<String, Any?>()
+            var expected: T? = null
 
             operator fun getValue(thisRef: Any?, property: KProperty<*>): Any? = properties[property.name]
 
@@ -202,7 +206,7 @@ abstract class UnitSim(
 
         inner class ProviderPair<T>(val item: T) {
             operator fun component1(): T = item
-            operator fun component2(): DynamicProperties = objectProvider
+            operator fun component2(): DynamicProperties<*> = objectProvider
         }
 
     }

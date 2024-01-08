@@ -62,44 +62,94 @@ jobs:
           # Choose color based on job status
           COLOR_CODE_BASED_ON_STATUS: ${{ needs.unit-sim.result == 'success' && '3066993' || '15158332' }} # Green for success, red for failure
         run: |
+          COMMIT_MESSAGE=$(git log -1 --pretty=format:"%s")
+          COMMIT_AUTHOR=$(git log -1 --pretty=format:"%an")
+          BRANCH_NAME=${GITHUB_REF#refs/heads/}
+          CHANGES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
+
           curl -X POST \
-          -H "Content-Type: application/json" \
-          -d '{
-            "embeds": [
-              {
-                "title": "GitHub Actions Workflow Status",
-                "description": "Workflow `'"$GITHUB_WORKFLOW"'` on `'"$GITHUB_REPOSITORY"'`",
-                "url": "'"$GITHUB_RUN_ID_LINK"'",
-                "color": '"$COLOR_CODE_BASED_ON_STATUS"',
-                "fields": [
-                  {
-                    "name": "Branch",
-                    "value": "`'"$GITHUB_REF"'`",
-                    "inline": true
+            -H "Content-Type: application/json" \
+            -d '{
+              "content": "whats up",
+              "embeds": [
+                {
+                  "title": "Changes detected in $BRANCH_NAME",
+                  "description": "Workflow `'"$GITHUB_WORKFLOW"'` on `'"$GITHUB_REPOSITORY"'`",
+                  "fields": [
+                    {
+                      "name": "Commit",
+                      "value": "'"${COMMIT_MESSAGE}"'",
+                      "inline": false
+                    },
+                    {
+                      "name": "Author",
+                      "value": "'"${COMMIT_AUTHOR}"'",
+                      "inline": true
+                    },
+                    {
+                        "name": "Status",
+                        "value": "`'"$JOB_STATUS"'`",
+                        "inline": false
+                    },
+                    {
+                      "name": "Event",
+                      "value": "`'"$GITHUB_EVENT_NAME"'`",
+                      "inline": true
+                    },
+                    {
+                      "name": "Files Changed",
+                      "value": "'"${CHANGES}"'",
+                      "inline": false
+                    }
+                  ],
+                  "color": '"${{ needs.previous-job.outputs.color_code_based_on_status }}"',
+                  "footer": {
+                    "text": "GitHub Actions",
+                    "icon_url": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
                   },
-                  {
-                    "name": "Commit",
-                    "value": "`'"$GITHUB_SHA"'`",
-                    "inline": true
-                  },
-                  {
-                    "name": "Event",
-                    "value": "`'"$GITHUB_EVENT_NAME"'`",
-                    "inline": true
-                  },
-                  {
-                    "name": "Status",
-                    "value": "`'"$JOB_STATUS"'`",
-                    "inline": false
-                  }
-                ],
-                "footer": {
-                  "text": "GitHub Actions",
-                  "icon_url": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
-                },
-                "timestamp": "'"$TIMESTAMP"'"
-              }
-            ]
-          }' \
+                  "timestamp": "'"$TIMESTAMP"'"
+                }
+              ]
+            }' \
           ${{ secrets.VIOLABS_DISCORD_PUBLIC_WEBHOOK }}
+#          curl -X POST \
+#          -H "Content-Type: application/json" \
+#          -d '{
+#            "embeds": [
+#              {
+#                "title": "GitHub Actions Workflow Status",
+#                "description": "Workflow `'"$GITHUB_WORKFLOW"'` on `'"$GITHUB_REPOSITORY"'`",
+#                "url": "'"$GITHUB_RUN_ID_LINK"'",
+#                "color": '"$COLOR_CODE_BASED_ON_STATUS"',
+#                "fields": [
+#                  {
+#                    "name": "Branch",
+#                    "value": "`'"$GITHUB_REF"'`",
+#                    "inline": true
+#                  },
+#                  {
+#                    "name": "Commit",
+#                    "value": "`'"$GITHUB_SHA"'`",
+#                    "inline": true
+#                  },
+#                  {
+#                    "name": "Event",
+#                    "value": "`'"$GITHUB_EVENT_NAME"'`",
+#                    "inline": true
+#                  },
+#                  {
+#                    "name": "Status",
+#                    "value": "`'"$JOB_STATUS"'`",
+#                    "inline": false
+#                  }
+#                ],
+#                "footer": {
+#                  "text": "GitHub Actions",
+#                  "icon_url": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+#                },
+#                "timestamp": "'"$TIMESTAMP"'"
+#              }
+#            ]
+#          }' \
+#          ${{ secrets.VIOLABS_DISCORD_PUBLIC_WEBHOOK }}
       
