@@ -11,7 +11,8 @@ import kotlin.reflect.KClass
  * This class is responsible for providing a display name for test invocations and managing additional extensions
  * based on the provided scenario.
  *
- * @property entry A map entry where the key is a string representing the scenario identifier, and the value is the [Scenario] object.
+ * @property entry A map entry where the key is a string representing the scenario identifier, and the value is the
+ * [Scenario] object.
  * @property methodName The name of the method in which this context is being used, which may include special tokens.
  */
 class WarpDistributor(
@@ -45,7 +46,8 @@ class WarpDistributor(
      * Provides a list of additional extensions needed for the test invocation context.
      *
      * These extensions are derived from the scenario content and are used to inject parameters into the test method.
-     * It handles various types such as maps, lists, and classes, and wraps them in `PositionCoil` or `WarpCoil` extensions.
+     * It handles various types such as maps, lists, and classes, and wraps them in `PositionCoil` or `WarpCoil`
+     * extensions.
      *
      * @return A mutable list of [Extension] objects required for the test context.
      */
@@ -78,14 +80,18 @@ class WarpDistributor(
     }
 
     /**
-     * Determines the appropriate `ParameterResolver` for a given parameter based on its type and index.
+     * Determines the appropriate `ParameterResolver` for a given parameter
+     * based on its type and index.
      *
-     * This function checks the type of the value associated with a map entry and returns a suitable [ParameterResolver].
-     * It adjusts the index based on the presence of a 'scenario' key in the map, which is tracked using [HasScenario].
+     * This function checks the type of the value associated with a map entry and
+     * returns a suitable [ParameterResolver].
+     * It adjusts the index based on the presence of a 'scenario' key in the map,
+     * which is tracked using [HasScenario].
      *
      * @param i The original index of the parameter in the map.
      * @param entry A map entry consisting of a key and a value representing a parameter.
-     * @param hasScenario An instance of `HasScenario` used to track the presence of a 'scenario' key and adjust the index.
+     * @param hasScenario An instance of `HasScenario` used to track the presence of a 'scenario' key
+     *                    and adjust the index.
      * @return A `ParameterResolver` appropriate for the type of the value, or null if the key is 'scenario'.
      */
     private fun determineCoilForParameter(

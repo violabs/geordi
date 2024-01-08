@@ -56,7 +56,12 @@ interface DebugLogging {
 
 internal const val DEBUG_ITEMS_TITLE = "DEBUG ITEMS"
 internal const val DEBUG_MOCKS_TITLE = "MOCK METRICS"
-internal const val DEBUG_DEFAULT_WIDTH = 26
+private const val MIN_SIZE = 26
+
+internal const val DEBUG_DEFAULT_WIDTH = MIN_SIZE
+
+private const val PADDING = 4
+private const val DEFAULT = 0
 
 /**
  * Default implementation of the DebugLogging interface.
@@ -97,7 +102,8 @@ internal class DefaultDebugLogging : DebugLogging {
         val debugLines = debugItems.toString().asLines()
 
         // Determine the maximum width for the debug item lines.
-        val max = stringMax(26, *debugLines.toTypedArray())
+        @Suppress("SpreadOperator")
+        val max = stringMax(MIN_SIZE, *debugLines.toTypedArray())
 
         // Create border lines for the debug log.
         val (topBorder, middleBar, bottomBorder) = Border(max)
@@ -205,7 +211,7 @@ internal class DefaultDebugLogging : DebugLogging {
      */
     private fun stringMax(number: Int, vararg strings: String): Int {
         // Returns the greater value between 'number' and the length of the longest string in 'strings'.
-        return max(strings.maxOfOrNull(String::length) ?: 0, number)
+        return max(strings.maxOfOrNull(String::length) ?: DEFAULT, number)
     }
 
     /**
@@ -231,7 +237,7 @@ internal class DefaultDebugLogging : DebugLogging {
         // Calculates the amount of space needed on each side of the title to center it within 'max' width.
         val debugTitleSpaces = " ".repeat((max - this.length) / 2)
         // Adjusts for even or odd 'max' widths to ensure proper centering.
-        val offset = if (max % 2 == 0) " " else ""
+        val offset = if (max % 2 == DEFAULT) " " else ""
         // Returns the formatted title line, centered and enclosed within borders.
         return "║ $debugTitleSpaces$this$debugTitleSpaces $offset║"
     }
@@ -256,7 +262,7 @@ internal class DefaultDebugLogging : DebugLogging {
     private fun List<Pair<String, String>>.alignContent(max: Int) = this.joinToString("\n") { (e, a) ->
         val numberOfSpaces = max - e.length
 
-        val g = " ".repeat(numberOfSpaces + 4)
+        val g = " ".repeat(numberOfSpaces + PADDING)
 
         "$e$g$a"
     }
@@ -267,14 +273,14 @@ internal class DefaultDebugLogging : DebugLogging {
 
         val zippedWithNulls = expectedLines.zipWithNulls(actualLines)
 
-        val max = expectedLines.maxOfOrNull(String::length) ?: 0
+        val max = expectedLines.maxOfOrNull(String::length) ?: DEFAULT
 
         val based = zippedWithNulls.alignContent(max)
 
         val expectWord = "EXPECT"
         val actualWord = "ACTUAL"
 
-        val numberOfSpaces = max - expectWord.length + 4
+        val numberOfSpaces = max - expectWord.length + PADDING
 
         val titleGap = " ".repeat(numberOfSpaces)
 

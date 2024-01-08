@@ -1,6 +1,7 @@
 package io.violabs.geordi.examples
 
-import io.violabs.geordi.*
+import io.violabs.geordi.SimulationGroup
+import io.violabs.geordi.UnitSim
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.TestTemplate
 import java.time.LocalDate
@@ -19,6 +20,7 @@ private val FILE_BASED_SCENARIOS = SimulationGroup
  * Defines parameter-based scenarios for testing.
  * Each scenario includes a name, a person's name, their date of joining, and their years of service.
  */
+@Suppress("MagicNumber")
 private val PARAMETER_BASED_SCENARIOS = SimulationGroup
     .vars("scenario", "name",            "date joined",                               "years of service")
     .with("geordi",   "Geordi LaForge",  LocalDate.now(),                             4)
@@ -50,6 +52,7 @@ class UnitTestExample : UnitSim(testResourceFolder = "unitTestExample") {
      * @param expectedFile The file containing the expected results.
      */
     @TestTemplate
+    @Suppress("FunctionNaming")
     fun `show file based test`(scenarioFile: String, expectedFile: String) = test {
         expectFromFileContent(expectedFile) {
             // transform the content here
@@ -69,6 +72,7 @@ class UnitTestExample : UnitSim(testResourceFolder = "unitTestExample") {
      * @param yearsOfService The number of years the person has served.
      */
     @TestTemplate
+    @Suppress("FunctionNaming")
     fun `show parameter based test`(name: String, dateJoined: LocalDate, yearsOfService: Int) = test {
         expect { true }
 
@@ -78,6 +82,7 @@ class UnitTestExample : UnitSim(testResourceFolder = "unitTestExample") {
     }
 
     @TestTemplate
+    @Suppress("FunctionNaming")
     fun `show sim ex test`(first: String, second: String, third: String) = test {
         expect { third }
 
@@ -97,6 +102,7 @@ class UnitTestExample : UnitSim(testResourceFolder = "unitTestExample") {
          * Property to check if the crew member is considered senior.
          * This example considers a crew member senior if they have 1 year of service.
          */
+        @Suppress("MagicNumber")
         val isSenior: Boolean
             get() = yearsOfService > 3 // low bar
     }

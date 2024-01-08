@@ -1,6 +1,9 @@
 package io.violabs.geordi
 
-import io.mockk.*
+import io.mockk.confirmVerified
+import io.mockk.mockkClass
+import io.mockk.verify
+import io.violabs.geordi.exceptions.FileNotFoundException
 import org.junit.jupiter.api.extension.ExtendWith
 import java.io.File
 import kotlin.reflect.KFunction
@@ -103,6 +106,7 @@ abstract class UnitSim(
         if (mocks.isEmpty()) return
 
         // Confirm that all mocks have been verified.
+        @Suppress("SpreadOperator")
         confirmVerified(*mocks.toTypedArray())
     }
 
@@ -124,6 +128,7 @@ abstract class UnitSim(
      * @param T The type of the expected and actual results in the test case.
      * @param useHorizontalLogs Flag to indicate if logs should be formatted horizontally.
      */
+    @Suppress("TooManyFunctions")
     inner class TestSlice<T>(
         private val useHorizontalLogs: Boolean = false
     ) {
@@ -165,7 +170,8 @@ abstract class UnitSim(
         /**
          * Sets the expected result for a test.
          *
-         * @param givenFn A lambda that takes 'DynamicProperties<T>' and returns the expected result of type T (or null).
+         * @param givenFn A lambda that takes 'DynamicProperties<T>' and returns the expected result of type
+         * T (or null).
          */
         fun expect(givenFn: (DynamicProperties<T>) -> T?) {
             // Assigns a lambda that sets 'expected' based on the execution of 'givenFn'.
@@ -179,12 +185,19 @@ abstract class UnitSim(
          * Sets the expected result for a test, using the content of a file.
          *
          * @param filename The name of the file whose content is to be used.
-         * @param givenFn A lambda that takes a 'ProviderPair<String>' representing the file content and returns the expected result.
+         * @param givenFn A lambda that takes a 'ProviderPair<String>' representing the file content and returns
+         * the expected result.
          */
         fun expectFromFileContent(filename: String, givenFn: (fileContentProvider: ProviderPair<String>) -> T?) {
             // Determines the full file path and reads its content.
             val fullFilename = filename.takeIf { testResourceFolder.isEmpty() } ?: "$testResourceFolder/$filename"
-            val uri = this::class.java.classLoader.getResource(fullFilename)?.toURI() ?: throw Exception("File not available $filename")
+
+            val uri = this::class
+                .java
+                .classLoader
+                .getResource(fullFilename)
+                ?.toURI() ?: throw FileNotFoundException(filename)
+
             val content = File(uri).readText()
 
             // Sets up the 'expect' function using the file content.
@@ -239,7 +252,7 @@ abstract class UnitSim(
                 .java
                 .classLoader
                 .getResource(fullFilename)
-                ?.toURI() ?: throw Exception("File not available $filename")
+                ?.toURI() ?: throw FileNotFoundException(filename)
 
             // Creates a File object from the URI.
             val file = File(uri)
@@ -270,7 +283,8 @@ abstract class UnitSim(
             crossinline whenFn: (props: DynamicProperties<T>) -> T,
             crossinline and: (itemProvider: ProviderPair<U>) -> Unit
         ) {
-            // Assigns a lambda that asserts an exception of type U is thrown and then allows for further processing with 'and'.
+            // Assigns a lambda that asserts an exception of type U is thrown and then allows
+            // for further processing with 'and'.
             wheneverCall = {
                 val item: U = assertFailsWith<U> { whenFn(objectProvider) }
                 and(ProviderPair(item))
@@ -281,7 +295,8 @@ abstract class UnitSim(
         /**
          * Defines a custom 'then' function to handle assertions.
          *
-         * @param thenFn A lambda that takes two parameters of type T (or null) and performs an action, typically an assertion.
+         * @param thenFn A lambda that takes two parameters of type T (or null) and performs an
+         *               action, typically an assertion.
          */
         fun then(thenFn: (T?, T?) -> Unit) {
             // Assigns a lambda that executes 'thenFn' with 'expected' and 'actual' as arguments.
@@ -294,10 +309,12 @@ abstract class UnitSim(
          * Sets up an equality check with a custom message and an optional pre-assertion action.
          *
          * @param message The message to be displayed if the assertion fails.
-         * @param runnable An optional lambda that takes 'DynamicProperties<T>' and performs an action before the assertion.
+         * @param runnable An optional lambda that takes [DynamicProperties] and performs an
+         *                 action before the assertion.
          */
         fun thenEquals(message: String, runnable: ((props: DynamicProperties<T>) -> Unit)? = null) {
-            // Assigns a lambda that optionally executes 'runnable' and then asserts equality between 'expected' and 'actual'.
+            // Assigns a lambda that optionally executes 'runnable' and then asserts equality
+            // between 'expected' and 'actual'.
             thenCall = {
                 runnable?.invoke(objectProvider)
 
@@ -403,11 +420,13 @@ abstract class UnitSim(
     companion object {
 
         /**
-         * Sets up test scenarios by creating instances of the specified class and associating them with simulation groups.
+         * Sets up test scenarios by creating instances of the specified class and associating
+         * them with simulation groups.
          *
-         * This function uses reflection to create an instance of the specified class and then applies a provider function
-         * to it. The provider function is expected to return an array of pairs, each consisting of a `SimulationGroup` and
-         * a method reference. Each pair is then used to populate the `WarpDriveEngine.SCENARIO_STORE`.
+         * This function uses reflection to create an instance of the specified class and
+         * then applies a provider function to it. The provider function is expected to return an array
+         * of pairs, each consisting of a `SimulationGroup` and a method reference. Each pair is then used to
+         * populate the `WarpDriveEngine.SCENARIO_STORE`.
          *
          * @param T The class type for which the scenarios are being set up.
          * @param provider A lambda function that, when applied to an instance of T, provides an array of pairs of
@@ -428,15 +447,17 @@ abstract class UnitSim(
         }
 
         /**
-         * Sets up test scenarios with a variable number of pairs, each consisting of a `SimulationGroup` and a function to
+         * Sets up test scenarios with a variable number of pairs, each consisting of a `SimulationGroup`
+         * and a function to
          * retrieve a method reference.
          *
          * This function creates an instance of the specified class and applies a lambda to it for each pair to retrieve
-         * the method name. The scenarios are then associated with these method names in the `WarpDriveEngine.SCENARIO_STORE`.
+         * the method name. The scenarios are then associated with these method names in the
+         * `WarpDriveEngine.SCENARIO_STORE`.
          *
          * @param T The class type for which the scenarios are being set up.
-         * @param methodPairs Vararg parameter of pairs, each pair contains a `SimulationGroup` and a lambda function to
-         *                    fetch the method reference.
+         * @param methodPairs Vararg parameter of pairs, each pair contains a `SimulationGroup` and a
+         *                    lambda function to fetch the method reference.
          */
         inline fun <reified T> setup(vararg methodPairs: Pair<SimulationGroup, T.() -> KFunction<*>>) {
             // Create a new instance of the specified class.

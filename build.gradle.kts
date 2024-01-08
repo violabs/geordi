@@ -1,3 +1,4 @@
+
 plugins {
     kotlin("jvm") version "1.9.21"
 }
@@ -31,5 +32,3 @@ subprojects {
 kotlin {
     jvmToolchain(20)
 }
-
-

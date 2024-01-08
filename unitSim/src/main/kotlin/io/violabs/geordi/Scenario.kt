@@ -6,7 +6,8 @@ package io.violabs.geordi
  * from this in the [WarpDistributor] class to determine the resolver for each value in the map. Each value
  * can associate to a parameter of a test function.
  *
- * @property content A map containing the data of the scenario. Keys are strings and values can be any type, including null.
+ * @property content A map containing the data of the scenario. Keys are strings and values can be any type,
+ * including null.
  */
 data class Scenario(val content: Map<String, Any?>) {
     /**
