@@ -113,7 +113,7 @@ class UnitSimTests {
                 }
             }
 
-            inner class DelegateTest(dynamicProperties: TestSlice<*>.DynamicProperties) {
+            inner class DelegateTest(dynamicProperties: TestSlice<*>.DynamicProperties<*>) {
                 val test by dynamicProperties
             }
         }

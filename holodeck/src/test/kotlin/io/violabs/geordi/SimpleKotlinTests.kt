@@ -41,6 +41,6 @@ class SimpleKotlinTests : UnitSim() {
     }
 }
 
-class Greeting(properties: UnitSim.TestSlice<String>.DynamicProperties) {
+class Greeting(properties: UnitSim.TestSlice<String>.DynamicProperties<*>) {
     val greeting by properties
 }

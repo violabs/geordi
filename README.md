@@ -41,8 +41,8 @@ companion object {
     @JvmStatic
     @BeforeAll
     fun setup() = setup<UnitTestExample>(
-        FILE_BASED_SCENARIOS to { it::`show file based test` },
-        PARAMETER_BASED_SCENARIOS to { it::`show parameter based test` }
+        FILE_BASED_SCENARIOS to { ::`show file based test` },
+        PARAMETER_BASED_SCENARIOS to { ::`show parameter based test` }
     )
 }
 ```
@@ -50,8 +50,9 @@ Add this companion object which uses the SimulationGroups you want to test, as w
 it should use. The test function should be a function that takes the same number of parameters as the number of
 variables in the SimulationGroup. The parameters should be in the same order as the variables in the SimulationGroup.
 
-> The `{ it::show file based test }` format basically provides a function where the parameter is an instance
-> of this class. That gives access to the available functions on that class.
+> The `{ ::show file based test }` format basically provides a function where the parameter is an instance
+> of this class. That gives access to the available functions on that class. It is the same as 
+> `{ this::show file based test }`
 
 ### Writing Test Templates
 Create test templates in your test classes using the `@TestTemplate` annotation. Example:
