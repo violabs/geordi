@@ -8,7 +8,7 @@ Geordi Test Framework is a Kotlin-based testing framework that leverages JUnit 5
 feature for dynamic and parameterized testing. Designed for flexibility and ease of use, it supports file-based and 
 parameter-based scenarios, making it ideal for a wide range of testing needs. Inspired by Spock, this framework
 aims to provide a similar level of testing power and flexibility in a more lightweight and Kotlin-friendly package.
-
+test
 ## Features
 - 🚀 **Dynamic Test Creation:** Generate multiple test cases from compact scenario definitions.
 - 📁 **File-Based Testing:** Easily define tests that rely on file inputs and expected outputs.
