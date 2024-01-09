@@ -32,11 +32,9 @@ jobs:
       - name: Add coverage to PR
         uses: mi-kas/kover-report@v1.8
         with:
-          paths: |
+          path: |
             ${{ github.workspace }}/unitSim/build/reports/kover/report.xml
           token: ${{ secrets.GITHUB_TOKEN }}
-          pass-emoji: ':sparkles:'
-          fail-emoji: ':fire:'
           title: Code Coverage
           update-comment: true
           min-coverage-overall: 80
