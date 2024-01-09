@@ -1,0 +1,44 @@
+name: Test Actions
+
+on:
+  pull_request:
+    branches: [ actions ]
+
+jobs:
+  unit-sim:
+    name: Unit Sim Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK 20
+        uses: actions/setup-java@v3
+        with:
+          java-version: '20'
+          distribution: 'temurin'
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
+      - name: Cache Gradle packages
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+      - name: Run Gradle tests in unitSim
+        run: ./gradlew :unitSim:test
+      - name: Add coverage to PR
+        uses: mi-kas/kover-report@v1.8
+        with:
+          paths: |
+            ${{ github.workspace }}/unitSim/build/reports/kover/report.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
+          pass-emoji: ':sparkles:'
+          fail-emoji: ':fire:'
+          title: Code Coverage
+          update-comment: true
+          min-coverage-overall: 80
+          min-coverage-changed-files: 80
+          coverage-counter-type: LINE
