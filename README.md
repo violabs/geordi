@@ -1,5 +1,5 @@
 # Geordi
-The Next Generation of Testing Framework
+The Next Generation of Testing
 
 ![push](https://github.com/violabs/geordi/actions/workflows/push.yml/badge.svg?branch=main)
 
