@@ -23,6 +23,7 @@ class SimulationGroup(private val properties: Array<out String>) {
      * @param scenarioParts Variable number of arguments representing different parts of a scenario.
      * @return The current instance of [SimulationGroup] for chaining calls.
      */
+    @Suppress("ForbiddenComment")
     // TODO: Add support for validating size must match. Possibly, type must match
     fun with(vararg scenarioParts: Any?): SimulationGroup = apply {
         properties

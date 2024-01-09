@@ -214,7 +214,13 @@ class UnitSimTests {
             @Test
             fun `wheneverWithFile throws an exception`() = test {
                 wheneverThrows<Exception>({ wheneverWithFile("missing.txt") { } }) {
-                    assert(it.item.message == "File not available missing.txt")
+                    assert(it.item.message == "File not found: missing.txt") {
+                        """
+                            
+                            EXPECT: File not available missing.txt
+                            ACTUAL: ${it.item.message}
+                        """.trimIndent()
+                    }
                 }
             }
         }
@@ -300,9 +306,12 @@ class UnitSimTests {
     }
 }
 
+const val TEST_1 = "test"
+const val TEST_2 = "test 2"
+
 class GeordiTestClass {
-    fun `here is the method`(): String = "test"
-    fun `here is a different method`(): String = "test 2"
+    fun `here is the method`(): String = TEST_1
+    fun `here is a different method`(): String = TEST_2
 }
 
 class GeordiMockTest(private val compositionService: GeordiMockCompositionService) {
