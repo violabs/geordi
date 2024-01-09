@@ -1,5 +1,7 @@
 import io.gitlab.arturbosch.detekt.Detekt
 import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
+import org.jetbrains.dokka.gradle.DokkaTask
+import java.net.URI
 
 version = "1.0.0-SNAPSHOT"
 
@@ -7,6 +9,8 @@ plugins {
     jacoco
     java
     id("io.gitlab.arturbosch.detekt") version "1.23.4"
+    `maven-publish`
+    id("org.jetbrains.dokka") version "1.9.10"
 }
 
 dependencies {
@@ -65,3 +69,81 @@ tasks.withType<Detekt>().configureEach {
 tasks.withType<DetektCreateBaselineTask>().configureEach {
     jvmTarget = "1.8"
 }
+
+tasks.named<DokkaTask>("dokkaJavadoc") {
+    dokkaSourceSets {
+        named("main") {
+            includeNonPublic.set(false)
+            skipDeprecated.set(true)
+            jdkVersion.set(8)
+            sourceLink {
+                val uri: URI = URI.create("https://github.com/violabs/geordi")
+                this.remoteUrl.set(uri.toURL())
+                this.remoteLineSuffix.set("#L")
+                this.localDirectory.set(project.projectDir)
+            }
+        }
+    }
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("mavenKotlin") {
+            from(components["kotlin"])
+
+            groupId = "io.violabs.geordi"
+            artifactId = "unitsim"
+
+            // Project information
+            pom {
+                name.set("Geordi - Next Generation Testing Framework")
+                description.set("""
+                    Geordi Test Framework is a Kotlin-based testing framework integrating with 
+                    JUnit 5's TestTemplate for dynamic and parameterized testing. It supports file-based 
+                    and parameter-based scenarios, suitable for various testing contexts. Key features 
+                    include dynamic test case generation, SimulationGroup for scenario organization, and 
+                    integration with JUnit 5's advanced features. It also includes a utility class, UnitSim, 
+                    for method-level testing and mocking with Mockk. Geordi is inspired by the Spock framework, 
+                    aiming to provide comparable functionality in a Kotlin-optimized package.
+                """.trimIndent())
+                url.set("https://github.com/violabs/geordi")
+
+                licenses {
+                    license {
+                        name.set("The Apache License, Version 2.0")
+                        url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
+                    }
+                }
+
+                developers {
+                    developer {
+                        id.set("joshstallnick")
+                        name.set("Josh Stallnick")
+                        organization.set("Violabs Software")
+                    }
+                }
+
+                scm {
+                    connection.set("scm:git:git://github.com/violabs/geordi.git")
+                    developerConnection.set("scm:git:ssh://github.com:violabs/geordi.git")
+                    url.set("https://github.com/violabs/geordi")
+                }
+            }
+
+            // Attaching Dokka-generated documentation
+            val dokkaJavadocJar by tasks.registering(Jar::class) {
+                archiveClassifier.set("javadoc")
+                from(tasks["dokkaJavadoc"])
+            }
+            artifact(dokkaJavadocJar)
+
+            // Attaching sources
+            val sourcesJar by tasks.registering(Jar::class) {
+                archiveClassifier.set("sources")
+                from(sourceSets["main"].allSource)
+            }
+            artifact(sourcesJar)
+        }
+    }
+}
+

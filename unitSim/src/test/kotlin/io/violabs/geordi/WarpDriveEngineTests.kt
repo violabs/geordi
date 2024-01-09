@@ -33,7 +33,7 @@ class WarpDriveEngineTests {
         val context = mockk<ExtensionContext>()
 
         every { context.requiredTestMethod } returns mockk {
-            every { name } returns null
+            every { name }
         }
 
         assertThrows<Exception> {

@@ -1,7 +1,7 @@
-# Geordi Test Framework
+# Geordi
+The Next Generation of Testing Framework
 
 ![push](https://github.com/violabs/geordi/actions/workflows/push.yml/badge.svg?branch=main)
-
 
 ## Introduction
 Geordi Test Framework is a Kotlin-based testing framework that leverages JUnit 5's `TestTemplate` 
@@ -19,7 +19,7 @@ aims to provide a similar level of testing power and flexibility in a more light
 ## Getting Started
 
 ### Prerequisites
-- Kotlin
+- Kotlin (or Java)
 - JUnit 5
 
 ### Installation
