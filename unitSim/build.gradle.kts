@@ -11,6 +11,7 @@ plugins {
     id("io.gitlab.arturbosch.detekt") version "1.23.4"
     `maven-publish`
     id("org.jetbrains.dokka") version "1.9.10"
+    id("org.jetbrains.kotlinx.kover") version "0.7.5"
 }
 
 dependencies {
@@ -23,27 +24,16 @@ dependencies {
 
 tasks.withType<Test>  {
     useJUnitPlatform()
-    finalizedBy(tasks.jacocoTestReport)
+    finalizedBy(tasks.koverHtmlReport)
 }
 
-jacoco {
-    toolVersion = "0.8.11"
-}
-
-tasks.jacocoTestReport {
-    // Depends on the 'test' task defined by the Java plugin
-    dependsOn("test")
-    reports {
-        xml.required.set(true)
-        html.required.set(true)
+koverReport {
+    filters {
+        excludes {
+            // exclusion rules - classes to exclude from report
+            classes("io.violabs.geordi.examples.**")
+        }
     }
-    classDirectories.setFrom(
-        files(classDirectories.files.map {
-            fileTree(it) {
-                exclude("**/io/violabs/geordi/examples/**")
-            }
-        })
-    )
 }
 
 detekt {
