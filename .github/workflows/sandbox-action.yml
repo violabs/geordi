@@ -29,6 +29,7 @@ jobs:
             ${{ runner.os }}-gradle-
       - name: Run Gradle tests in unitSim
         run: ./gradlew :unitSim:test
+
       - name: Add coverage to PR
         uses: mi-kas/kover-report@v1.8
         with:

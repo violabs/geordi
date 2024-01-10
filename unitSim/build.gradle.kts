@@ -25,6 +25,7 @@ dependencies {
 tasks.withType<Test>  {
     useJUnitPlatform()
     finalizedBy(tasks.koverHtmlReport)
+    finalizedBy(tasks.koverXmlReport)
 }
 
 koverReport {
