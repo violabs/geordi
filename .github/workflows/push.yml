@@ -2,7 +2,9 @@ name: Test Actions
 
 on:
   pull_request:
-    branches: [ actions ]
+    branches: [ main ]
+  push:
+    branches: [ main ]
 
 jobs:
   unit-sim:
