@@ -43,3 +43,115 @@ jobs:
           min-coverage-overall: 80
           min-coverage-changed-files: 80
           coverage-counter-type: LINE
+
+
+  unit-sim-detekt:
+    name: Unit Sim Detekt Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK 20
+        uses: actions/setup-java@v3
+        with:
+          java-version: '20'
+          distribution: 'temurin'
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
+      - name: Cache Gradle packages
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+      - name: Run Gradle detekt in unitSim
+        run: ./gradlew :unitSim:detekt
+
+  holodeck:
+    name: Holodeck Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK 20
+        uses: actions/setup-java@v3
+        with:
+          java-version: '20'
+          distribution: 'temurin'
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
+      - name: Cache Gradle packages
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+      - name: Run Gradle tests in unitSim
+        run: ./gradlew :holodeck:test
+
+  notify-discord:
+    name: Notify Discord
+    runs-on: ubuntu-latest
+    needs: [ unit-sim, holodeck, unit-sim-detekt ]
+    if: always()
+    steps:
+      - uses: actions/checkout@v3
+      - name: Send formatted notification to Discord
+        env:
+          JOB_STATUS: ${{ needs.unit-sim.result }}
+          GITHUB_REF: ${{ github.ref }}
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          GITHUB_WORKFLOW: ${{ github.workflow }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_RUN_ID_LINK: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          TIMESTAMP: ${{ steps.your-timestamp.outputs.time }} # Make sure to generate a timestamp in an earlier step
+          # Choose color based on job status
+          COLOR_CODE_BASED_ON_STATUS: ${{ needs.unit-sim.result == 'success' && '3066993' || '15158332' }} # Green for success, red for failure
+        run: |
+          curl -X POST \
+          -H "Content-Type: application/json" \
+          -d '{
+            "embeds": [
+              {
+                "title": "GitHub Actions Workflow Status",
+                "description": "Workflow `'"$GITHUB_WORKFLOW"'` on `'"$GITHUB_REPOSITORY"'`",
+                "url": "'"$GITHUB_RUN_ID_LINK"'",
+                "color": '"$COLOR_CODE_BASED_ON_STATUS"',
+                "fields": [
+                  {
+                    "name": "Branch",
+                    "value": "`'"$GITHUB_REF"'`",
+                    "inline": true
+                  },
+                  {
+                    "name": "Commit",
+                    "value": "`'"$GITHUB_SHA"'`",
+                    "inline": true
+                  },
+                  {
+                    "name": "Event",
+                    "value": "`'"$GITHUB_EVENT_NAME"'`",
+                    "inline": true
+                  },
+                  {
+                    "name": "Status",
+                    "value": "`'"$JOB_STATUS"'`",
+                    "inline": false
+                  }
+                ],
+                "footer": {
+                  "text": "GitHub Actions",
+                  "icon_url": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+                },
+                "timestamp": "'"$TIMESTAMP"'"
+              }
+            ]
+          }' \
+          ${{ secrets.VIOLABS_DISCORD_PUBLIC_WEBHOOK }}
