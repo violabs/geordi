@@ -1,7 +1,9 @@
 import io.gitlab.arturbosch.detekt.Detekt
 import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
 import org.jetbrains.dokka.gradle.DokkaTask
+import java.io.FileNotFoundException
 import java.net.URI
+import java.util.*
 
 version = "1.0.0-SNAPSHOT"
 
@@ -10,8 +12,24 @@ plugins {
     java
     id("io.gitlab.arturbosch.detekt") version "1.23.4"
     `maven-publish`
+    signing
     id("org.jetbrains.dokka") version "1.9.10"
     id("org.jetbrains.kotlinx.kover") version "0.7.5"
+}
+
+val secretPropsFile = project.rootProject.file("local.properties")
+if (secretPropsFile.exists()) {
+    secretPropsFile.reader().use {
+        Properties().apply { load(it) }
+    }.onEach { (name, value) ->
+        ext[name.toString()] = value
+    }
+} else {
+    ext["signing.keyId"] = System.getenv("SIGNING_KEY_ID")
+    ext["signing.password"] = System.getenv("SIGNING_PASSWORD")
+    ext["signing.secretKeyRingFile"] = System.getenv("SIGNING_SECRET_KEY_RING_FILE")
+    ext["ossrhUsername"] = System.getenv("OSSRH_USERNAME")
+    ext["ossrhPassword"] = System.getenv("OSSRH_PASSWORD")
 }
 
 dependencies {
@@ -79,11 +97,30 @@ tasks.named<DokkaTask>("dokkaJavadoc") {
 
 publishing {
     publications {
+        repositories {
+            val ossrhUsername: String by project
+            val ossrhPassword: String by project
+            maven {
+                url = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
+                credentials {
+                    username = ossrhUsername
+                    password = ossrhPassword
+                }
+            }
+            maven {
+                url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
+                credentials {
+                    username = ossrhUsername
+                    password = ossrhPassword
+                }
+            }
+        }
+
         create<MavenPublication>("mavenKotlin") {
             from(components["kotlin"])
 
             groupId = "io.violabs.geordi"
-            artifactId = "unitsim"
+            artifactId = "unit-sim"
 
             // Project information
             pom {
@@ -135,5 +172,25 @@ publishing {
             }
             artifact(sourcesJar)
         }
+
+        signing {
+            val keyId = findProperty("signing.keyId") as String?
+            val secretKeyFile = findProperty("signing.secretKeyFile") as String?
+            val password = findProperty("signing.password") as String?
+
+            val secretKey: String? = secretKeyFile?.let { readFileContent(it) }
+
+            useInMemoryPgpKeys(keyId, secretKey, password)
+            sign(publishing.publications)
+        }
+
     }
+}
+
+fun readFileContent(fileName: String): String {
+    val file = File(fileName)
+    if (!file.exists()) {
+        throw FileNotFoundException("File $fileName does not exist.")
+    }
+    return file.readText()
 }
