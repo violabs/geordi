@@ -17,21 +17,6 @@ plugins {
     id("org.jetbrains.kotlinx.kover") version "0.7.5"
 }
 
-//val secretPropsFile = project.rootProject.file("local.properties")
-//if (secretPropsFile.exists()) {
-//    secretPropsFile.reader().use {
-//        Properties().apply { load(it) }
-//    }.onEach { (name, value) ->
-//        ext[name.toString()] = value
-//    }
-//} else {
-//    ext["signing.keyId"] = System.getenv("SIGNING_KEY_ID")
-//    ext["signing.password"] = System.getenv("SIGNING_PASSWORD")
-//    ext["signing.secretKeyRingFile"] = System.getenv("SIGNING_SECRET_KEY_RING_FILE")
-//    ext["ossrhUsername"] = System.getenv("OSSRH_USERNAME")
-//    ext["ossrhPassword"] = System.getenv("OSSRH_PASSWORD")
-//}
-
 dependencies {
     implementation("org.junit.jupiter:junit-jupiter-api:5.9.2")
     implementation("io.mockk:mockk:1.13.5")
@@ -93,6 +78,10 @@ tasks.named<DokkaTask>("dokkaJavadoc") {
             }
         }
     }
+}
+
+tasks.jar {
+    exclude("**/examples/**")
 }
 
 publishing {
@@ -172,25 +161,12 @@ publishing {
             }
             artifact(sourcesJar)
         }
-
-        signing {
-            val keyId = findProperty("signing.keyId") as String?
-            val secretKeyFile = findProperty("signing.secretKeyFile") as String?
-            val password = findProperty("signing.password") as String?
-
-            val secretKey: String? = secretKeyFile?.let { readFileContent(it) }
-
-            useInMemoryPgpKeys(keyId, secretKey, password)
-            sign(publishing.publications)
-        }
-
     }
 }
 
 fun readFileContent(fileName: String): String {
     val file = File(fileName)
     if (!file.exists()) {
-//        throw FileNotFoundException("File $fileName does not exist.")
         println("ERROR!!: File $fileName does not exist.")
         return ""
     }

@@ -6,6 +6,7 @@ plugins {
     id("com.github.johnrengelman.shadow") version "8.1.1"
     `maven-publish`
     signing
+    id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
 }
 
 group = "io.violabs"
@@ -40,7 +41,7 @@ subprojects {
 }
 
 kotlin {
-    jvmToolchain(20)
+    jvmToolchain(11)
 }
 
 val secretPropsFile = project.rootProject.file("local.properties")
@@ -64,4 +65,29 @@ fun readFileContent(fileName: String): String {
         throw FileNotFoundException("File $fileName does not exist.")
     }
     return file.readText()
+}
+
+nexusPublishing {
+    val ossrhUsername: String by project
+    val ossrhPassword: String by project
+
+    repositories {
+        sonatype {
+            nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
+            snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
+            username.set(ossrhUsername)
+            password.set(ossrhPassword)
+        }
+    }
+}
+
+signing {
+    val keyId = findProperty("signing.keyId") as String?
+    val secretKeyFile = findProperty("signing.secretKeyFile") as String?
+    val password = findProperty("signing.password") as String?
+
+    val secretKey: String? = secretKeyFile?.let { readFileContent(it) }
+
+    useInMemoryPgpKeys(keyId, secretKey, password)
+    sign(publishing.publications)
 }
