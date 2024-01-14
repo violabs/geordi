@@ -48,7 +48,7 @@ if (secretPropsFile.exists()) {
 } else {
     ext["signing.keyId"] = System.getenv("SIGNING_KEY_ID")
     ext["signing.password"] = System.getenv("SIGNING_PASSWORD")
-    ext["signing.secretKeyRingFile"] = System.getenv("SIGNING_SECRET_KEY_RING_FILE")
+    ext["signing.secretKey"] = System.getenv("SIGNING_SECRET_KEY")
     ext["ossrhUsername"] = System.getenv("OSSRH_USERNAME")
     ext["ossrhPassword"] = System.getenv("OSSRH_PASSWORD")
 }
@@ -75,14 +75,3 @@ nexusPublishing {
         }
     }
 }
-
-//signing {
-//    val keyId = findProperty("signing.keyId") as String?
-//    val secretKeyFile = findProperty("signing.secretKeyFile") as String?
-//    val password = findProperty("signing.password") as String?
-//
-//    val secretKey: String? = secretKeyFile?.let { readFileContent(it) }
-//
-//    useInMemoryPgpKeys(keyId, secretKey, password)
-//    sign(publishing.publications)
-//}

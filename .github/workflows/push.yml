@@ -31,6 +31,12 @@ jobs:
             ${{ runner.os }}-gradle-
       - name: Run Gradle tests in unitSim
         run: ./gradlew :unitSim:test
+        env:
+          SIGNING_KEY_ID: ${{ secrets.SIGNING_KEY_ID }}
+          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+          SIGNING_SECRET_KEY: ${{ secrets.SIGNING_SECRET_KEY }}
+          OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
 
       - name: Add coverage to PR
         uses: mi-kas/kover-report@v1.8
@@ -69,6 +75,12 @@ jobs:
             ${{ runner.os }}-gradle-
       - name: Run Gradle detekt in unitSim
         run: ./gradlew :unitSim:detekt
+        env:
+          SIGNING_KEY_ID: ${{ secrets.SIGNING_KEY_ID }}
+          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+          SIGNING_SECRET_KEY: ${{ secrets.SIGNING_SECRET_KEY }}
+          OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
 
   holodeck:
     name: Holodeck Test
@@ -94,6 +106,12 @@ jobs:
             ${{ runner.os }}-gradle-
       - name: Run Gradle tests in unitSim
         run: ./gradlew :holodeck:test
+        env:
+          SIGNING_KEY_ID: ${{ secrets.SIGNING_KEY_ID }}
+          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+          SIGNING_SECRET_KEY: ${{ secrets.SIGNING_SECRET_KEY }}
+          OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
 
   notify-discord:
     name: Notify Discord

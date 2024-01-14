@@ -178,7 +178,9 @@ signing {
     val secretKeyFile = findProperty("signing.secretKeyFile") as String?
     val password = findProperty("signing.password") as String?
 
-    val secretKey: String? = secretKeyFile?.let { readFileContent(it) }
+    val secretKey: String? = secretKeyFile
+        ?.let { readFileContent(it) }
+        ?: (findProperty("signing.secretKey") as String?)
 
     useInMemoryPgpKeys(keyId, secretKey, password)
     sign(publishing.publications)
