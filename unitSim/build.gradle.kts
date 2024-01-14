@@ -108,7 +108,6 @@ publishing {
         create<MavenPublication>("mavenKotlin") {
             from(components["kotlin"])
 
-            groupId = "io.violabs.geordi"
             artifactId = "unit-sim"
 
             // Project information
@@ -165,10 +164,22 @@ publishing {
 }
 
 fun readFileContent(fileName: String): String {
-    val file = File(fileName)
+    var file = File(fileName)
     if (!file.exists()) {
-        println("ERROR!!: File $fileName does not exist.")
-        return ""
+        file = File("../$fileName")
+        if (!file.exists()) throw FileNotFoundException("File $fileName does not exist.")
     }
     return file.readText()
+}
+
+
+signing {
+    val keyId = findProperty("signing.keyId") as String?
+    val secretKeyFile = findProperty("signing.secretKeyFile") as String?
+    val password = findProperty("signing.password") as String?
+
+    val secretKey: String? = secretKeyFile?.let { readFileContent(it) }
+
+    useInMemoryPgpKeys(keyId, secretKey, password)
+    sign(publishing.publications)
 }

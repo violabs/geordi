@@ -3,22 +3,14 @@ import java.util.*
 
 plugins {
     kotlin("jvm") version "1.9.21"
-    id("com.github.johnrengelman.shadow") version "8.1.1"
     `maven-publish`
     signing
     id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
 }
 
-group = "io.violabs"
-version = "1.0.0"
-
-dependencies {
-    implementation(project(":unitSim"))
-}
+group = "io.violabs.geordi"
 
 allprojects {
-    group = "io.violabs"
-
     repositories {
         mavenCentral()
         gradlePluginPortal()
@@ -30,6 +22,8 @@ allprojects {
 }
 
 subprojects {
+    group = "io.violabs.geordi"
+
     apply {
         plugin("org.jetbrains.kotlin.jvm")
     }
@@ -60,9 +54,10 @@ if (secretPropsFile.exists()) {
 }
 
 fun readFileContent(fileName: String): String {
-    val file = File(fileName)
+    var file = File(fileName)
     if (!file.exists()) {
-        throw FileNotFoundException("File $fileName does not exist.")
+        file = File("../$fileName")
+        if (!file.exists()) throw FileNotFoundException("File $fileName does not exist.")
     }
     return file.readText()
 }
@@ -81,13 +76,13 @@ nexusPublishing {
     }
 }
 
-signing {
-    val keyId = findProperty("signing.keyId") as String?
-    val secretKeyFile = findProperty("signing.secretKeyFile") as String?
-    val password = findProperty("signing.password") as String?
-
-    val secretKey: String? = secretKeyFile?.let { readFileContent(it) }
-
-    useInMemoryPgpKeys(keyId, secretKey, password)
-    sign(publishing.publications)
-}
+//signing {
+//    val keyId = findProperty("signing.keyId") as String?
+//    val secretKeyFile = findProperty("signing.secretKeyFile") as String?
+//    val password = findProperty("signing.password") as String?
+//
+//    val secretKey: String? = secretKeyFile?.let { readFileContent(it) }
+//
+//    useInMemoryPgpKeys(keyId, secretKey, password)
+//    sign(publishing.publications)
+//}
