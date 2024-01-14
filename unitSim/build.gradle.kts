@@ -5,32 +5,32 @@ import java.io.FileNotFoundException
 import java.net.URI
 import java.util.*
 
-version = "1.0.0-SNAPSHOT"
+version = "1.0.0"
 
 plugins {
     jacoco
     java
-    id("io.gitlab.arturbosch.detekt") version "1.23.4"
     `maven-publish`
     signing
+    id("io.gitlab.arturbosch.detekt") version "1.23.4"
     id("org.jetbrains.dokka") version "1.9.10"
     id("org.jetbrains.kotlinx.kover") version "0.7.5"
 }
 
-val secretPropsFile = project.rootProject.file("local.properties")
-if (secretPropsFile.exists()) {
-    secretPropsFile.reader().use {
-        Properties().apply { load(it) }
-    }.onEach { (name, value) ->
-        ext[name.toString()] = value
-    }
-} else {
-    ext["signing.keyId"] = System.getenv("SIGNING_KEY_ID")
-    ext["signing.password"] = System.getenv("SIGNING_PASSWORD")
-    ext["signing.secretKeyRingFile"] = System.getenv("SIGNING_SECRET_KEY_RING_FILE")
-    ext["ossrhUsername"] = System.getenv("OSSRH_USERNAME")
-    ext["ossrhPassword"] = System.getenv("OSSRH_PASSWORD")
-}
+//val secretPropsFile = project.rootProject.file("local.properties")
+//if (secretPropsFile.exists()) {
+//    secretPropsFile.reader().use {
+//        Properties().apply { load(it) }
+//    }.onEach { (name, value) ->
+//        ext[name.toString()] = value
+//    }
+//} else {
+//    ext["signing.keyId"] = System.getenv("SIGNING_KEY_ID")
+//    ext["signing.password"] = System.getenv("SIGNING_PASSWORD")
+//    ext["signing.secretKeyRingFile"] = System.getenv("SIGNING_SECRET_KEY_RING_FILE")
+//    ext["ossrhUsername"] = System.getenv("OSSRH_USERNAME")
+//    ext["ossrhPassword"] = System.getenv("OSSRH_PASSWORD")
+//}
 
 dependencies {
     implementation("org.junit.jupiter:junit-jupiter-api:5.9.2")
@@ -126,12 +126,12 @@ publishing {
             pom {
                 name.set("Geordi - Next Generation Testing Framework")
                 description.set("""
-                    Geordi Test Framework is a Kotlin-based testing framework integrating with 
-                    JUnit 5's TestTemplate for dynamic and parameterized testing. It supports file-based 
-                    and parameter-based scenarios, suitable for various testing contexts. Key features 
-                    include dynamic test case generation, SimulationGroup for scenario organization, and 
-                    integration with JUnit 5's advanced features. It also includes a utility class, UnitSim, 
-                    for method-level testing and mocking with Mockk. Geordi is inspired by the Spock framework, 
+                    Geordi Test Framework is a Kotlin-based testing framework integrating with
+                    JUnit 5's TestTemplate for dynamic and parameterized testing. It supports file-based
+                    and parameter-based scenarios, suitable for various testing contexts. Key features
+                    include dynamic test case generation, SimulationGroup for scenario organization, and
+                    integration with JUnit 5's advanced features. It also includes a utility class, UnitSim,
+                    for method-level testing and mocking with Mockk. Geordi is inspired by the Spock framework,
                     aiming to provide comparable functionality in a Kotlin-optimized package.
                 """.trimIndent())
                 url.set("https://github.com/violabs/geordi")
@@ -190,7 +190,9 @@ publishing {
 fun readFileContent(fileName: String): String {
     val file = File(fileName)
     if (!file.exists()) {
-        throw FileNotFoundException("File $fileName does not exist.")
+//        throw FileNotFoundException("File $fileName does not exist.")
+        println("ERROR!!: File $fileName does not exist.")
+        return ""
     }
     return file.readText()
 }
