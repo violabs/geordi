@@ -21,6 +21,7 @@ aims to provide a similar level of testing power and flexibility in a more light
 ### Prerequisites
 - Kotlin (or Java)
 - JUnit 5
+- Java 11 (Minumum)
 
 ### Installation
 Will be in maven soon.
