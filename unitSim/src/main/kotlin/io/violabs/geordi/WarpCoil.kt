@@ -50,8 +50,17 @@ open class WarpCoil<T>(open val index: Int = -1, open val input: T) : ParameterR
         val inJava = inKlass.java
         val paramClass = parameterContext?.parameter?.type
         val paramKlass = paramClass?.kotlin
+        val index = parameterContext?.index
+
         if (paramKlass != inKlass && paramClass != inJava) {
-            throw ParameterResolutionException("No parameter found for input $input")
+            throw ParameterResolutionException(
+                """
+                    No parameter found for input=$input, index=$index, 
+                    inKlass=$inKlass, inJava=$inJava, paramClass=$paramClass, 
+                    paramKlass=$paramKlass,
+                    $parameterContext
+                """.trimIndent()
+            )
         }
 
         return input
