@@ -21,7 +21,6 @@ dependencies {
     implementation("io.mockk:mockk:1.13.5")
     implementation(kotlin("stdlib"))
     implementation(kotlin("test"))
-    implementation(project(":core"))
 }
 
 tasks.withType<Test>  {

@@ -1,5 +1,6 @@
 package io.violabs.geordi
 
+import io.violabs.geordi.common.asLines
 import kotlin.math.max
 
 /**
@@ -7,7 +8,6 @@ import kotlin.math.max
  *
  * Allows for storing, adding, and logging debug items, as well as logging debug metrics.
  */
-@ExcludeFromJacocoGeneratedReport
 interface DebugLogging {
     val debugItems: MutableMap<String, Any?>
 
@@ -38,7 +38,6 @@ interface DebugLogging {
      * Companion object to provide a default implementation of DebugLogging.
      */
     companion object {
-        @ExcludeFromJacocoGeneratedReport
         fun default(): DebugLogging = DefaultDebugLogging()
     }
 
@@ -65,7 +64,6 @@ private const val DEFAULT = 0
 /**
  * Default implementation of the DebugLogging interface.
  */
-@ExcludeFromJacocoGeneratedReport
 internal class DefaultDebugLogging : DebugLogging {
     override val debugItems = mutableMapOf<String, Any?>()
     /**
@@ -159,7 +157,6 @@ internal class DefaultDebugLogging : DebugLogging {
     /**
      * Utility class for generating ASCII art style borders in debug logs.
      */
-    @ExcludeFromJacocoGeneratedReport
     class Border(
         val size: Int,
         val gap: String,
@@ -172,6 +169,7 @@ internal class DefaultDebugLogging : DebugLogging {
         operator fun component3() = bottom
 
         constructor(size: Int) : this(size, "═".repeat(size + 2))
+        // Left as a reference
         companion object Defaults {
             const val TOP_LEFT = "╔"
             const val TOP_RIGHT = "╗"
@@ -185,7 +183,6 @@ internal class DefaultDebugLogging : DebugLogging {
     /**
      * Default implementation of the MetricsReader interface for logging metrics.
      */
-    @ExcludeFromJacocoGeneratedReport
     object DefaultMetricReader : DebugLogging.MetricsReader {
         override fun List<Any>.logThrownCount() = logCount("THROWN")
         override fun List<Any>.logCalledCount() = logCount("CALLED")
@@ -257,7 +254,6 @@ internal class DefaultDebugLogging : DebugLogging {
         e to actual
     }
 
-    @ExcludeFromJacocoGeneratedReport
     private fun List<Pair<String, String>>.alignContent(max: Int) = this.joinToString("\n") { (e, a) ->
         val numberOfSpaces = max - e.length
 

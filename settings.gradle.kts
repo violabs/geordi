@@ -3,6 +3,5 @@ plugins {
 }
 rootProject.name = "geordi"
 
-include("core")
 include("unitSim")
 include("holodeck")

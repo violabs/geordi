@@ -11,7 +11,6 @@ package io.violabs.geordi
  * @param throwable The throwable to be thrown when the mock call is executed. Default is null.
  * @param mockCall A lambda representing the mock call.
  */
-@ExcludeFromJacocoGeneratedReport
 class MockTask<T : Any>(
     var returnedItem: T? = null,
     var throwable: Throwable? = null,

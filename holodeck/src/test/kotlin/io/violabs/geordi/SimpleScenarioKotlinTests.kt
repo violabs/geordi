@@ -2,6 +2,7 @@ package io.violabs.geordi
 
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.TestTemplate
+import io.violabs.geordi.common.with
 
 private val SIMULATION = SimulationGroup
     .vars("scenario", "x", "y", "sum")

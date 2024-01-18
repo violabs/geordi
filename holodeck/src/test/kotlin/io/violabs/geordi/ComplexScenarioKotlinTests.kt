@@ -2,6 +2,7 @@ package io.violabs.geordi
 
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.TestTemplate
+import io.violabs.geordi.common.with
 
 private val SHARED_MAP_SIMULATION = SimulationGroup
     .vars("scenario",    "username",     "userId", "accountId")
