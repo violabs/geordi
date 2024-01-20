@@ -34,6 +34,8 @@ interface DebugLogging {
 
     fun <T> logAssertion(expected: T?, actual: T?, message: String? = null, useHorizontalLogs: Boolean = false)
 
+    fun <T> makeHorizontalLogs(expected: T?, actual: T?): String
+
     /**
      * Companion object to provide a default implementation of DebugLogging.
      */
@@ -262,7 +264,7 @@ internal class DefaultDebugLogging : DebugLogging {
         "$e$g$a"
     }
 
-    private fun <T> makeHorizontalLogs(expected: T?, actual: T?): String {
+    override fun <T> makeHorizontalLogs(expected: T?, actual: T?): String {
         val expectedLines = expected.toString().asLines()
         val actualLines = actual.toString().asLines()
 

@@ -173,7 +173,7 @@ abstract class UnitSim(
          * @param givenFn A lambda that takes 'DynamicProperties<T>' and returns the expected result of type
          * T (or null).
          */
-        fun expect(givenFn: (DynamicProperties<T>) -> T?) {
+        fun expect(givenFn: (props: DynamicProperties<T>) -> T?) {
             // Assigns a lambda that sets 'expected' based on the execution of 'givenFn'.
             expectCall = {
                 expected = givenFn(objectProvider)
@@ -232,7 +232,7 @@ abstract class UnitSim(
          *
          * @param whenFn A lambda that takes 'DynamicProperties<T>' and returns a value of type T (or null).
          */
-        fun whenever(whenFn: (DynamicProperties<T>) -> T?) {
+        fun whenever(whenFn: (props: DynamicProperties<T>) -> T?) {
             // Assigns a lambda that executes 'whenFn' with 'objectProvider' and stores the result in 'actual'.
             wheneverCall = { actual = whenFn(objectProvider) }
         }
@@ -298,7 +298,7 @@ abstract class UnitSim(
          * @param thenFn A lambda that takes two parameters of type T (or null) and performs an
          *               action, typically an assertion.
          */
-        fun then(thenFn: (T?, T?) -> Unit) {
+        fun then(thenFn: (expected: T?, actual: T?) -> Unit) {
             // Assigns a lambda that executes 'thenFn' with 'expected' and 'actual' as arguments.
             thenCall = {
                 thenFn(expected, actual)
@@ -321,6 +321,18 @@ abstract class UnitSim(
                 assert(expected == actual) {
                     // Logs the assertion details using 'debugLogging'.
                     debugLogging.logAssertion(expected, actual, message, useHorizontalLogs)
+                }
+            }
+        }
+
+        fun <R> mapEquals(message: String? = "", mappingFn: (T?) -> R?) {
+            thenCall = {
+                val mappedActual = mappingFn(actual)
+                val mappedExpected = mappingFn(expected)
+
+                assert(mappedExpected == mappedActual) {
+                    // Logs the assertion details using 'debugLogging'.
+                    debugLogging.logAssertion(mappedExpected, mappedActual, message, useHorizontalLogs)
                 }
             }
         }
