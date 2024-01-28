@@ -1,4 +1,4 @@
-package io.violabs.geordi
+package io.violabs.geordi.debug
 
 import io.violabs.geordi.common.asLines
 import kotlin.math.max

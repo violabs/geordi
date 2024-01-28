@@ -3,6 +3,7 @@ package io.violabs.geordi
 import io.mockk.confirmVerified
 import io.mockk.mockkClass
 import io.mockk.verify
+import io.violabs.geordi.debug.DebugLogging
 import io.violabs.geordi.exceptions.FileNotFoundException
 import org.junit.jupiter.api.extension.ExtendWith
 import java.io.File
@@ -22,8 +23,8 @@ import io.mockk.every as mockkEvery
 @ExtendWith(WarpDriveEngine::class)
 abstract class UnitSim(
     protected val testResourceFolder: String = "",
-    private val debugLogging: DebugLogging = DebugLogging.default(),
-    private val debugEnabled: Boolean = true,
+    protected val debugLogging: DebugLogging = DebugLogging.default(),
+    private val debugEnabled: Boolean = true
 ) {
     // Collection of mock objects used in the tests.
     private val mocks: MutableList<Any> = mutableListOf()
@@ -64,7 +65,11 @@ abstract class UnitSim(
      * @param horizontalLogs Determines if logs should be formatted horizontally.
      * @param runnable A lambda that defines the test specifications within a TestSlice context.
      */
-    fun <T> test(horizontalLogs: Boolean = false, runnable: TestSlice<T>.() -> Unit) {
+    fun <T> test(
+        horizontalLogs: Boolean = false,
+
+        runnable: TestSlice<T>.() -> Unit
+    ) {
         val spec = TestSlice<T>(horizontalLogs)
 
         runnable(spec)
@@ -138,7 +143,7 @@ abstract class UnitSim(
         // Function placeholders for different test phases.
         internal var setupCall: () -> Unit = {}                         // Setup phase.
         internal var expectCall: () -> Unit = {}                        // Expectation definition phase.
-        internal var mockSetupCall: () -> Unit = this::processMocks     // Mock setup phase.
+        internal var mockSetupCall: () -> Unit? = this::processMocks    // Mock setup phase.
         var wheneverCall: () -> Unit = {}                               // Action under test.
         internal var thenCall: () -> Unit = this::defaultThenEquals     // Assertion phase.
         internal var tearDownCall: () -> Unit = {}                      // Teardown phase.
@@ -366,7 +371,7 @@ abstract class UnitSim(
          * This function partitions mock calls into throwables and runnables, then logs different counts
          * (thrown, called, null returned, and value returned) for each category.
          */
-        private fun processMocks() = debugLogging.logDebugMocks {
+        private fun processMocks() = debugLogging.takeIf { mockCalls.isNotEmpty() }?.logDebugMocks {
             // Partition mock calls into those with throwables and those without (runnables).
             val (throwables, runnables) = mockCalls.partition { it.throwable != null }
 
