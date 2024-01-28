@@ -36,6 +36,8 @@ interface DebugLogging {
 
     fun <T> makeHorizontalLogs(expected: T?, actual: T?): String
 
+    fun <T> logDifferences(expected: T?, actual: T?)
+
     /**
      * Companion object to provide a default implementation of DebugLogging.
      */
@@ -248,6 +250,10 @@ internal class DefaultDebugLogging : DebugLogging {
             println("EXPECT: $expected")
             println("ACTUAL: $actual")
         }
+    }
+
+    override fun <T> logDifferences(expected: T?, actual: T?) {
+        println(DiffChecker.findDifferences(expected.toString(), actual.toString()))
     }
 
     private fun List<String>.zipWithNulls(other: List<String>) = this.mapIndexed { index, e ->

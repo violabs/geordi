@@ -33,36 +33,7 @@ open class WarpCoil<T>(open val index: Int = -1, open val input: T) : ParameterR
         return typeMatches && parameterContext.index == index
     }
 
-    /**
-     * Resolves the parameter for the given context.
-     *
-     * It provides the actual parameter value to be used in the method or constructor where it's needed.
-     * If the type of the input does not match the type of the parameter, it throws a `ParameterResolutionException`.
-     *
-     * @param parameterContext Context for the parameter, providing access to its metadata.
-     * @param extensionContext Context for the extension, providing additional information.
-     * @return The value of the input parameter to be used.
-     * @throws ParameterResolutionException if no parameter is found for the input.
-     */
     override fun resolveParameter(parameterContext: ParameterContext?, extensionContext: ExtensionContext?): T {
-
-        val inKlass = input!!::class
-        val inJava = inKlass.java
-        val paramClass = parameterContext?.parameter?.type
-        val paramKlass = paramClass?.kotlin
-        val index = parameterContext?.index
-
-        if (paramKlass != inKlass && paramClass != inJava) {
-            throw ParameterResolutionException(
-                """
-                    No parameter found for input=$input, index=$index, 
-                    inKlass=$inKlass, inJava=$inJava, paramClass=$paramClass, 
-                    paramKlass=$paramKlass,
-                    $parameterContext
-                """.trimIndent()
-            )
-        }
-
         return input
     }
 }

@@ -46,33 +46,59 @@ class WarpCoilTests {
 
     @Nested
     inner class ResolveParameterTests {
-        @Test
-        fun `resolveParameter throws exception if context is null`() {
-            val coil = WarpCoil(1, input = true)
-
-            assertThrows<ParameterResolutionException> {
-                coil.resolveParameter(null, null)
-            }
-        }
 
         @Test
-        fun `resolveParameter throws exception if does not match`() {
-            val coil = WarpCoil(1, input = true)
-
-            val context = TestParameterContext(StringTestClass::class)
-
-            assertThrows<ParameterResolutionException> {
-                coil.resolveParameter(context, null)
-            }
-        }
-
-        @Test
-        fun `resolveParameter successfully returns`() {
+        fun `resolveParameter successfully returns the correct string`() {
             val coil = WarpCoil(1, input = "test")
 
             val context = TestParameterContext(MultiStringTestClass::class, 1)
 
             assert(coil.resolveParameter(context, null) == "test")
+        }
+
+        @Test
+        fun `resolveParameter successfully processes for a standard class`() {
+            val coil = WarpCoil(1, input = StandardClass("test"))
+
+            val context = TestParameterContext(StandardClassTestClass::class, 1)
+
+            assert(coil.resolveParameter(context, null).internals == "test")
+        }
+
+        @Test
+        fun `resolveParameter successfully processes for a data class`() {
+            val coil = WarpCoil(1, input = DataClass("test"))
+
+            val context = TestParameterContext(DataClassTestClass::class, 1)
+
+            assert(coil.resolveParameter(context, null).internals == "test")
+        }
+
+        @Test
+        fun `resolveParameter successfully processes for a sealed class`() {
+            val coil = WarpCoil(1, input = SealedClass.Example())
+
+            val context = TestParameterContext(SealedClassTestClass::class, 1)
+
+            assert(coil.resolveParameter(context, null).internals == "test")
+        }
+
+        @Test
+        fun `resolveParameter successfully processes for a internal class`() {
+            val coil = WarpCoil(1, input = InternalClass("test"))
+
+            val context = TestParameterContext(InternalClassTestClass::class, 1)
+
+            assert(coil.resolveParameter(context, null).internals == "test")
+        }
+
+        @Test
+        fun `resolveParameter successfully processes for a value class`() {
+            val coil = WarpCoil(1, input = ValueClass("test"))
+
+            val context = TestParameterContext(ValueClassTestClass::class, 1)
+
+            assert(coil.resolveParameter(context, null).internals == "test")
         }
     }
 }
@@ -103,13 +129,57 @@ class MultiStringTestClass : TestClass<String> {
     }
 }
 
+class StandardClass(val internals: String)
+data class DataClass(val internals: String)
+sealed class SealedClass(val internals: String) {
+    class Example : SealedClass("test")
+}
+internal class InternalClass(val internals: String)
+@JvmInline
+value class ValueClass(val internals: String)
+
+class StandardClassTestClass : TestClass<StandardClass> {
+    fun testMethod(param1: StandardClass) {
+        println("testMethod: $param1")
+    }
+}
+
+class DataClassTestClass : TestClass<DataClass> {
+    fun testMethod(param1: StandardClass) {
+        println("testMethod: $param1")
+    }
+}
+
+class SealedClassTestClass : TestClass<SealedClass> {
+    fun testMethod(param1: StandardClass) {
+        println("testMethod: $param1")
+    }
+}
+
+class InternalClassTestClass : TestClass<InternalClass> {
+    fun testMethod(param1: StandardClass) {
+        println("testMethod: $param1")
+    }
+}
+
+class ValueClassTestClass : TestClass<ValueClass> {
+    fun testMethod(param1: StandardClass) {
+        println("testMethod: $param1")
+    }
+}
+
 class TestParameterContext<T, U : TestClass<T>>(
     val klass: KClass<U>, val testIndex: Int = 0
 ) : ParameterContext {
     override fun getParameter(): Parameter {
-        @Suppress("TooGenericExceptionThrown") return klass.java.declaredMethods.firstOrNull()?.parameters?.getOrNull(
-                testIndex
-            ) ?: throw Exception("No parameters found for ${klass.simpleName}")
+        @Suppress("TooGenericExceptionThrown")
+        return klass
+            .java
+            .declaredMethods
+            .firstOrNull()
+            ?.parameters
+            ?.getOrNull(testIndex)
+            ?: throw Exception("No parameters found for ${klass.simpleName}")
     }
 
     override fun getIndex(): Int = testIndex
