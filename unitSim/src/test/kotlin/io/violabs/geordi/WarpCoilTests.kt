@@ -3,12 +3,11 @@ package io.violabs.geordi
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ParameterContext
-import org.junit.jupiter.api.extension.ParameterResolutionException
 import java.lang.reflect.Parameter
 import java.util.*
 import kotlin.reflect.KClass
+import kotlin.test.assertTrue
 
 class WarpCoilTests {
     @Test
@@ -19,29 +18,77 @@ class WarpCoilTests {
         assert(default.index == -1)
     }
 
-    @Test
-    fun `supportsParameter returns false if context is null`() {
-        val coil = WarpCoil(1, input = true)
+    @Nested
+    inner class SupportsParameterTests {
+        @Test
+        fun `supportsParameter returns false if context is null`() {
+            val coil = WarpCoil(1, input = true)
 
-        assertFalse(coil.supportsParameter(null, null))
-    }
+            assertFalse(coil.supportsParameter(null, null))
+        }
 
-    @Test
-    fun `supportsParameter returns false type is not the same`() {
-        val coil = WarpCoil(1, input = true)
+        @Test
+        fun `supportsParameter returns false type is not the same`() {
+            val coil = WarpCoil(1, input = true)
 
-        val context = TestParameterContext(IntTestClass::class)
+            val context = TestParameterContext(IntTestClass::class)
 
-        assertFalse(coil.supportsParameter(context, null))
-    }
+            assertFalse(coil.supportsParameter(context, null))
+        }
 
-    @Test
-    fun `supportsParameter returns false index is not the same`() {
-        val coil = WarpCoil(1, input = true)
+        @Test
+        fun `supportsParameter returns false index is not the same`() {
+            val coil = WarpCoil(1, input = true)
 
-        val context = TestParameterContext(BooleanTestClass::class)
+            val context = TestParameterContext(BooleanTestClass::class)
 
-        assertFalse(coil.supportsParameter(context, null))
+            assertFalse(coil.supportsParameter(context, null))
+        }
+
+        @Test
+        fun `supportsParameter returns true - scenario standard class`() {
+            val coil = WarpCoil(0, input = StandardClass())
+
+            val context = TestParameterContext(StandardClassTestClass::class)
+
+            assertTrue(coil.supportsParameter(context, null))
+        }
+
+        @Test
+        fun `supportsParameter returns true - scenario data class`() {
+            val coil = WarpCoil(0, input = DataClass())
+
+            val context = TestParameterContext(DataClassTestClass::class)
+
+            assertTrue(coil.supportsParameter(context, null))
+        }
+
+        @Test
+        fun `supportsParameter returns true - scenario sealed class`() {
+            val coil = WarpCoil(0, input = SealedClass.Example())
+
+            val context = TestParameterContext(SealedClassTestClass::class)
+
+            assertTrue(coil.supportsParameter(context, null))
+        }
+
+        @Test
+        fun `supportsParameter returns true - scenario internal class`() {
+            val coil = WarpCoil(0, input = InternalClass())
+
+            val context = TestParameterContext(InternalClassTestClass::class)
+
+            assertTrue(coil.supportsParameter(context, null))
+        }
+
+        @Test
+        fun `supportsParameter returns true - scenario value class`() {
+            val coil = WarpCoil(0, input = ValueClass())
+
+            val context = TestParameterContext(ValueClassTestClass::class)
+
+            assertTrue(coil.supportsParameter(context, null))
+        }
     }
 
     @Nested
@@ -117,26 +164,22 @@ class BooleanTestClass : TestClass<Boolean> {
     }
 }
 
-class StringTestClass : TestClass<String> {
-    fun testMethod(param: String) {
-        println("testMethod $param")
-    }
-}
-
 class MultiStringTestClass : TestClass<String> {
     fun testMethod(param1: Boolean, param2: String) {
         println("testMethod $param1 and $param2")
     }
 }
 
-class StandardClass(val internals: String)
-data class DataClass(val internals: String)
-sealed class SealedClass(val internals: String) {
-    class Example : SealedClass("test")
+class StandardClass(val internals: String = "test")
+data class DataClass(val internals: String = "test")
+sealed class SealedClass(val internals: String = "test") {
+    class Example : SealedClass()
 }
-internal class InternalClass(val internals: String)
+
+internal class InternalClass(val internals: String = "test")
+
 @JvmInline
-value class ValueClass(val internals: String)
+value class ValueClass(val internals: String = "test")
 
 class StandardClassTestClass : TestClass<StandardClass> {
     fun testMethod(param1: StandardClass) {
@@ -145,25 +188,25 @@ class StandardClassTestClass : TestClass<StandardClass> {
 }
 
 class DataClassTestClass : TestClass<DataClass> {
-    fun testMethod(param1: StandardClass) {
+    fun testMethod(param1: DataClass) {
         println("testMethod: $param1")
     }
 }
 
 class SealedClassTestClass : TestClass<SealedClass> {
-    fun testMethod(param1: StandardClass) {
+    fun testMethod(param1: SealedClass) {
         println("testMethod: $param1")
     }
 }
 
-class InternalClassTestClass : TestClass<InternalClass> {
-    fun testMethod(param1: StandardClass) {
+internal class InternalClassTestClass : TestClass<InternalClass> {
+    fun testMethod(param1: InternalClass) {
         println("testMethod: $param1")
     }
 }
 
 class ValueClassTestClass : TestClass<ValueClass> {
-    fun testMethod(param1: StandardClass) {
+    fun testMethod(param1: ValueClass) {
         println("testMethod: $param1")
     }
 }
