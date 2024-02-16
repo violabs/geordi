@@ -1,4 +1,4 @@
-package io.violabs.geordi
+package io.violabs.geordi.debug
 
 import io.violabs.geordi.common.asLines
 import kotlin.math.max
@@ -34,6 +34,10 @@ interface DebugLogging {
 
     fun <T> logAssertion(expected: T?, actual: T?, message: String? = null, useHorizontalLogs: Boolean = false)
 
+    fun <T> makeHorizontalLogs(expected: T?, actual: T?): String
+
+    fun <T> logDifferences(expected: T?, actual: T?)
+
     /**
      * Companion object to provide a default implementation of DebugLogging.
      */
@@ -64,6 +68,7 @@ private const val DEFAULT = 0
 /**
  * Default implementation of the DebugLogging interface.
  */
+@Suppress("TooManyFunctions")
 internal class DefaultDebugLogging : DebugLogging {
     override val debugItems = mutableMapOf<String, Any?>()
     /**
@@ -248,6 +253,10 @@ internal class DefaultDebugLogging : DebugLogging {
         }
     }
 
+    override fun <T> logDifferences(expected: T?, actual: T?) {
+        println(DiffChecker.findDifferences(expected.toString(), actual.toString()))
+    }
+
     private fun List<String>.zipWithNulls(other: List<String>) = this.mapIndexed { index, e ->
         val actual = other.getOrNull(index) ?: ""
 
@@ -262,7 +271,7 @@ internal class DefaultDebugLogging : DebugLogging {
         "$e$g$a"
     }
 
-    private fun <T> makeHorizontalLogs(expected: T?, actual: T?): String {
+    override fun <T> makeHorizontalLogs(expected: T?, actual: T?): String {
         val expectedLines = expected.toString().asLines()
         val actualLines = actual.toString().asLines()
 

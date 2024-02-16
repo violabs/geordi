@@ -3,6 +3,7 @@ package io.violabs.geordi
 import io.mockk.confirmVerified
 import io.mockk.mockkClass
 import io.mockk.verify
+import io.violabs.geordi.debug.DebugLogging
 import io.violabs.geordi.exceptions.FileNotFoundException
 import org.junit.jupiter.api.extension.ExtendWith
 import java.io.File
@@ -22,8 +23,8 @@ import io.mockk.every as mockkEvery
 @ExtendWith(WarpDriveEngine::class)
 abstract class UnitSim(
     protected val testResourceFolder: String = "",
-    private val debugLogging: DebugLogging = DebugLogging.default(),
-    private val debugEnabled: Boolean = true,
+    protected val debugLogging: DebugLogging = DebugLogging.default(),
+    private val debugEnabled: Boolean = true
 ) {
     // Collection of mock objects used in the tests.
     private val mocks: MutableList<Any> = mutableListOf()
@@ -31,6 +32,14 @@ abstract class UnitSim(
     private val mockCalls = mutableListOf<MockTask<*>>()
     // Storage for debug items.
     private val debugItems = mutableMapOf<String, Any?>()
+
+    fun getTestFile(filename: String): File {
+        val fullFilename = filename.takeIf { testResourceFolder.isEmpty() } ?: "$testResourceFolder/$filename"
+        val uri = this::class.java.classLoader
+            .getResource(fullFilename)
+            ?.toURI() ?: throw FileNotFoundException(filename)
+        return File(uri)
+    }
 
     /**
      * Adds an object to debug logging with an optional custom key.
@@ -64,7 +73,11 @@ abstract class UnitSim(
      * @param horizontalLogs Determines if logs should be formatted horizontally.
      * @param runnable A lambda that defines the test specifications within a TestSlice context.
      */
-    fun <T> test(horizontalLogs: Boolean = false, runnable: TestSlice<T>.() -> Unit) {
+    fun <T> test(
+        horizontalLogs: Boolean = false,
+
+        runnable: TestSlice<T>.() -> Unit
+    ) {
         val spec = TestSlice<T>(horizontalLogs)
 
         runnable(spec)
@@ -138,7 +151,7 @@ abstract class UnitSim(
         // Function placeholders for different test phases.
         internal var setupCall: () -> Unit = {}                         // Setup phase.
         internal var expectCall: () -> Unit = {}                        // Expectation definition phase.
-        internal var mockSetupCall: () -> Unit = this::processMocks     // Mock setup phase.
+        internal var mockSetupCall: () -> Unit? = this::processMocks    // Mock setup phase.
         var wheneverCall: () -> Unit = {}                               // Action under test.
         internal var thenCall: () -> Unit = this::defaultThenEquals     // Assertion phase.
         internal var tearDownCall: () -> Unit = {}                      // Teardown phase.
@@ -173,7 +186,7 @@ abstract class UnitSim(
          * @param givenFn A lambda that takes 'DynamicProperties<T>' and returns the expected result of type
          * T (or null).
          */
-        fun expect(givenFn: (DynamicProperties<T>) -> T?) {
+        fun expect(givenFn: (props: DynamicProperties<T>) -> T?) {
             // Assigns a lambda that sets 'expected' based on the execution of 'givenFn'.
             expectCall = {
                 expected = givenFn(objectProvider)
@@ -189,16 +202,7 @@ abstract class UnitSim(
          * the expected result.
          */
         fun expectFromFileContent(filename: String, givenFn: (fileContentProvider: ProviderPair<String>) -> T?) {
-            // Determines the full file path and reads its content.
-            val fullFilename = filename.takeIf { testResourceFolder.isEmpty() } ?: "$testResourceFolder/$filename"
-
-            val uri = this::class
-                .java
-                .classLoader
-                .getResource(fullFilename)
-                ?.toURI() ?: throw FileNotFoundException(filename)
-
-            val content = File(uri).readText()
+            val content = getTestFile(filename).readText()
 
             // Sets up the 'expect' function using the file content.
             this.expect { givenFn(ProviderPair(content)) }
@@ -232,7 +236,7 @@ abstract class UnitSim(
          *
          * @param whenFn A lambda that takes 'DynamicProperties<T>' and returns a value of type T (or null).
          */
-        fun whenever(whenFn: (DynamicProperties<T>) -> T?) {
+        fun whenever(whenFn: (props: DynamicProperties<T>) -> T?) {
             // Assigns a lambda that executes 'whenFn' with 'objectProvider' and stores the result in 'actual'.
             wheneverCall = { actual = whenFn(objectProvider) }
         }
@@ -244,18 +248,7 @@ abstract class UnitSim(
          * @param whenFn A lambda that takes a 'ProviderPair<File>' and returns a value of type T (or null).
          */
         fun wheneverWithFile(filename: String, whenFn: (fileProvider: ProviderPair<File>) -> T?) {
-            // Determines the full file path, potentially including the test resource folder.
-            val fullFilename = filename.takeIf { testResourceFolder.isEmpty() } ?: "$testResourceFolder/$filename"
-
-            // Retrieves the URI of the file and throws an exception if the file is not available.
-            val uri = this::class
-                .java
-                .classLoader
-                .getResource(fullFilename)
-                ?.toURI() ?: throw FileNotFoundException(filename)
-
-            // Creates a File object from the URI.
-            val file = File(uri)
+            val file = getTestFile(filename)
 
             // Sets up the 'whenever' function using the file.
             this.whenever { whenFn(ProviderPair(file)) }
@@ -298,7 +291,7 @@ abstract class UnitSim(
          * @param thenFn A lambda that takes two parameters of type T (or null) and performs an
          *               action, typically an assertion.
          */
-        fun then(thenFn: (T?, T?) -> Unit) {
+        fun then(thenFn: (expected: T?, actual: T?) -> Unit) {
             // Assigns a lambda that executes 'thenFn' with 'expected' and 'actual' as arguments.
             thenCall = {
                 thenFn(expected, actual)
@@ -321,6 +314,18 @@ abstract class UnitSim(
                 assert(expected == actual) {
                     // Logs the assertion details using 'debugLogging'.
                     debugLogging.logAssertion(expected, actual, message, useHorizontalLogs)
+                }
+            }
+        }
+
+        fun <R> mapEquals(message: String? = "", mappingFn: (T?) -> R?) {
+            thenCall = {
+                val mappedActual = mappingFn(actual)
+                val mappedExpected = mappingFn(expected)
+
+                assert(mappedExpected == mappedActual) {
+                    // Logs the assertion details using 'debugLogging'.
+                    debugLogging.logAssertion(mappedExpected, mappedActual, message, useHorizontalLogs)
                 }
             }
         }
@@ -354,7 +359,7 @@ abstract class UnitSim(
          * This function partitions mock calls into throwables and runnables, then logs different counts
          * (thrown, called, null returned, and value returned) for each category.
          */
-        private fun processMocks() = debugLogging.logDebugMocks {
+        private fun processMocks() = debugLogging.takeIf { mockCalls.isNotEmpty() }?.logDebugMocks {
             // Partition mock calls into those with throwables and those without (runnables).
             val (throwables, runnables) = mockCalls.partition { it.throwable != null }
 

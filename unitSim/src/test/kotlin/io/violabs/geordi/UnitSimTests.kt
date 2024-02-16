@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import io.violabs.geordi.common.with
+import io.violabs.geordi.debug.DebugLogging
 
 class UnitSimTests {
     val debugLogging = mockk<DebugLogging>()

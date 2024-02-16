@@ -2,7 +2,6 @@ package io.violabs.geordi
 
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.api.extension.ParameterContext
-import org.junit.jupiter.api.extension.ParameterResolutionException
 import org.junit.jupiter.api.extension.ParameterResolver
 
 /**
@@ -20,6 +19,9 @@ open class WarpCoil<T>(open val index: Int = -1, open val input: T) : ParameterR
      * It checks if the type of the input matches the type of the parameter at the context's index
      * and if the index matches the parameter's index.
      *
+     * Currently, this only checks the indices since reflection acts differently between Java and
+     * Kotlin code in regard to JUnit
+     *
      * @param parameterContext Context for the parameter, providing access to its metadata.
      * @param extensionContext Context for the extension, providing additional information.
      * @return Boolean indicating whether the parameter is supported by this resolver.
@@ -28,41 +30,26 @@ open class WarpCoil<T>(open val index: Int = -1, open val input: T) : ParameterR
         if (parameterContext == null) return false
 
         val inputType = input!!::class
-        val typeMatches = inputType == parameterContext.parameter.type.kotlin
+        val parameterTypeJavaClass = parameterContext.parameter.type
+        val parameterTypeKotlinClass = parameterContext.parameter.type.kotlin
+        val typesMatch = inputType == parameterTypeKotlinClass
+        val indicesMatch = parameterContext.index == index
+        val inputName = inputType.simpleName
+        val parameterName = parameterTypeJavaClass.simpleName
+        val nameMatches = inputName == parameterName
 
-        return typeMatches && parameterContext.index == index
-    }
-
-    /**
-     * Resolves the parameter for the given context.
-     *
-     * It provides the actual parameter value to be used in the method or constructor where it's needed.
-     * If the type of the input does not match the type of the parameter, it throws a `ParameterResolutionException`.
-     *
-     * @param parameterContext Context for the parameter, providing access to its metadata.
-     * @param extensionContext Context for the extension, providing additional information.
-     * @return The value of the input parameter to be used.
-     * @throws ParameterResolutionException if no parameter is found for the input.
-     */
-    override fun resolveParameter(parameterContext: ParameterContext?, extensionContext: ExtensionContext?): T {
-
-        val inKlass = input!!::class
-        val inJava = inKlass.java
-        val paramClass = parameterContext?.parameter?.type
-        val paramKlass = paramClass?.kotlin
-        val index = parameterContext?.index
-
-        if (paramKlass != inKlass && paramClass != inJava) {
-            throw ParameterResolutionException(
-                """
-                    No parameter found for input=$input, index=$index, 
-                    inKlass=$inKlass, inJava=$inJava, paramClass=$paramClass, 
-                    paramKlass=$paramKlass,
-                    $parameterContext
-                """.trimIndent()
-            )
+        if (!typesMatch) {
+            println("WARNING! Types do not match - inputType: $inputType, parameterType: $parameterTypeJavaClass")
         }
 
+        if (!nameMatches) {
+            println("WARNING! Names do not match - inputName: $inputName, parameterName: $parameterName")
+        }
+
+        return indicesMatch
+    }
+
+    override fun resolveParameter(parameterContext: ParameterContext?, extensionContext: ExtensionContext?): T {
         return input
     }
 }

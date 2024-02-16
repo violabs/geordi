@@ -4,7 +4,7 @@ import org.jetbrains.dokka.gradle.DokkaTask
 import java.io.FileNotFoundException
 import java.net.URI
 
-version = "1.0.1"
+version = "1.0.4"
 
 plugins {
     jacoco
@@ -12,7 +12,6 @@ plugins {
     `maven-publish`
     signing
     id("io.gitlab.arturbosch.detekt") version "1.23.4"
-    id("org.jetbrains.dokka") version "1.9.10"
     id("org.jetbrains.kotlinx.kover") version "0.7.5"
 }
 
@@ -56,18 +55,18 @@ tasks.withType<Detekt>().configureEach {
 }
 
 tasks.withType<Detekt>().configureEach {
-    jvmTarget = "1.8"
+    jvmTarget = JavaVersion.VERSION_11.majorVersion
 }
 tasks.withType<DetektCreateBaselineTask>().configureEach {
-    jvmTarget = "1.8"
+    jvmTarget = JavaVersion.VERSION_11.majorVersion
 }
 
 tasks.named<DokkaTask>("dokkaJavadoc") {
     dokkaSourceSets {
         named("main") {
-            includeNonPublic.set(false)
+            includeNonPublic.set(true)
             skipDeprecated.set(true)
-            jdkVersion.set(8)
+            jdkVersion.set(11)
             sourceLink {
                 val uri: URI = URI.create("https://github.com/violabs/geordi")
                 this.remoteUrl.set(uri.toURL())
@@ -151,6 +150,12 @@ publishing {
             }
             artifact(dokkaJavadocJar)
 
+            val dokkaHtmlJar by tasks.registering(Jar::class) {
+                archiveClassifier.set("kdoc")
+                from(tasks["dokkaHtml"])
+            }
+            artifact(dokkaHtmlJar)
+
             // Attaching sources
             val sourcesJar by tasks.registering(Jar::class) {
                 archiveClassifier.set("sources")
@@ -182,4 +187,10 @@ signing {
 
     useInMemoryPgpKeys(keyId, secretKey, password)
     sign(publishing.publications)
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(11) // Specify your desired Java version here
+    }
 }

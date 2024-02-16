@@ -102,6 +102,12 @@ class SimulationGroup(private val properties: Array<out String>) {
         fun vars(vararg properties: String): SimulationGroup {
             return SimulationGroup(properties)
         }
+
+        fun scenarioVars(vararg properties: String): SimulationGroup {
+            val full = arrayOf("scenario") + properties
+
+            return SimulationGroup(full)
+        }
     }
 
 }
