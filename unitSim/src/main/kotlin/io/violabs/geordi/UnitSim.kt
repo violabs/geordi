@@ -33,6 +33,14 @@ abstract class UnitSim(
     // Storage for debug items.
     private val debugItems = mutableMapOf<String, Any?>()
 
+    fun getTestFile(filename: String): File {
+        val fullFilename = filename.takeIf { testResourceFolder.isEmpty() } ?: "$testResourceFolder/$filename"
+        val uri = this::class.java.classLoader
+            .getResource(fullFilename)
+            ?.toURI() ?: throw FileNotFoundException(filename)
+        return File(uri)
+    }
+
     /**
      * Adds an object to debug logging with an optional custom key.
      *
@@ -194,16 +202,7 @@ abstract class UnitSim(
          * the expected result.
          */
         fun expectFromFileContent(filename: String, givenFn: (fileContentProvider: ProviderPair<String>) -> T?) {
-            // Determines the full file path and reads its content.
-            val fullFilename = filename.takeIf { testResourceFolder.isEmpty() } ?: "$testResourceFolder/$filename"
-
-            val uri = this::class
-                .java
-                .classLoader
-                .getResource(fullFilename)
-                ?.toURI() ?: throw FileNotFoundException(filename)
-
-            val content = File(uri).readText()
+            val content = getTestFile(filename).readText()
 
             // Sets up the 'expect' function using the file content.
             this.expect { givenFn(ProviderPair(content)) }
@@ -249,18 +248,7 @@ abstract class UnitSim(
          * @param whenFn A lambda that takes a 'ProviderPair<File>' and returns a value of type T (or null).
          */
         fun wheneverWithFile(filename: String, whenFn: (fileProvider: ProviderPair<File>) -> T?) {
-            // Determines the full file path, potentially including the test resource folder.
-            val fullFilename = filename.takeIf { testResourceFolder.isEmpty() } ?: "$testResourceFolder/$filename"
-
-            // Retrieves the URI of the file and throws an exception if the file is not available.
-            val uri = this::class
-                .java
-                .classLoader
-                .getResource(fullFilename)
-                ?.toURI() ?: throw FileNotFoundException(filename)
-
-            // Creates a File object from the URI.
-            val file = File(uri)
+            val file = getTestFile(filename)
 
             // Sets up the 'whenever' function using the file.
             this.whenever { whenFn(ProviderPair(file)) }

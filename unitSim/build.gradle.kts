@@ -4,7 +4,7 @@ import org.jetbrains.dokka.gradle.DokkaTask
 import java.io.FileNotFoundException
 import java.net.URI
 
-version = "1.0.3"
+version = "1.0.4"
 
 plugins {
     jacoco
@@ -187,4 +187,10 @@ signing {
 
     useInMemoryPgpKeys(keyId, secretKey, password)
     sign(publishing.publications)
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(11) // Specify your desired Java version here
+    }
 }

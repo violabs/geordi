@@ -68,6 +68,7 @@ private const val DEFAULT = 0
 /**
  * Default implementation of the DebugLogging interface.
  */
+@Suppress("TooManyFunctions")
 internal class DefaultDebugLogging : DebugLogging {
     override val debugItems = mutableMapOf<String, Any?>()
     /**
