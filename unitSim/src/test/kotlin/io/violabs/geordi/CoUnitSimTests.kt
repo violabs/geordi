@@ -14,7 +14,7 @@ import io.violabs.geordi.shared.GeordiMockCompositionService
 import io.violabs.geordi.shared.GeordiMockTest
 import io.violabs.geordi.shared.GeordiTestClass
 
-class UnitSimTests {
+class CoUnitSimTests {
     val debugLogging = mockk<DebugLogging>()
 
     @AfterEach
@@ -25,7 +25,7 @@ class UnitSimTests {
 
     @Test
     fun `mock will create mock of specified type`() {
-        val unitSim = object : UnitSim() {
+        val unitSim = object : CoUnitSim() {
             fun testMock(): DebugLogging = mock()
         }
 
@@ -41,7 +41,7 @@ class UnitSimTests {
 
     @Test
     fun `every will create mock task`() {
-        val unitSim = object : UnitSim() {
+        val unitSim = object : CoUnitSim() {
             fun testEvery(): MockTask<String> = every { "test" }
         }
 
@@ -57,7 +57,7 @@ class UnitSimTests {
             val debugItem = "test"
             val indexKey = "0"
 
-            val unitSim = object : UnitSim(debugLogging = debugLogging) {
+            val unitSim = object : CoUnitSim(debugLogging = debugLogging) {
                 fun testDebug(): String = debugItem.debug()
             }
 
@@ -74,7 +74,7 @@ class UnitSimTests {
             val debugItem = "test"
             val providedKey = "testKey"
 
-            val unitSim = object : UnitSim(debugLogging = debugLogging) {
+            val unitSim = object : CoUnitSim(debugLogging = debugLogging) {
                 fun testDebug(): String = debugItem.debug(providedKey)
             }
 
@@ -88,32 +88,32 @@ class UnitSimTests {
     }
 
     @Nested
-    inner class TestSliceTests {
+    inner class CoTestSliceTests {
         // normal flow setup && given
         @Nested
-        inner class SetupTests : UnitSim() {
+        inner class SetupTests : CoUnitSim() {
             @Test
-            fun `setup will process field correctly`() = test {
-                setup {
+            fun `setup will process field correctly`() = testBlocking {
+                coSetup {
                     this["test"] = true
                 }
 
-                true.expect()
+                true.coExpect()
 
-                whenever {
+                coWhenever {
                     it["test"]
                 }
             }
 
             @Test
-            fun `given will process field correctly`() = test {
-                given {
+            fun `given will process field correctly`() = testBlocking {
+                coGiven {
                     this["test"] = true
                 }
 
-                true.expect()
+                true.coExpect()
 
-                whenever {
+                coWhenever {
                     DelegateTest(it).test
                 }
             }
@@ -125,46 +125,46 @@ class UnitSimTests {
 
         // normal flow expect && from file && null && method based
         @Nested
-        inner class ExpectedTests : UnitSim() {
+        inner class ExpectedTests : CoUnitSim() {
             @Test
-            fun `expect will process with provider`() = test {
-                given { this["test"] = true }
+            fun `expect will process with provider`() = testBlocking {
+                coGiven { this["test"] = true }
 
-                expect { it["test"] }
+                coExpect { it["test"] }
 
-                whenever { true }
+                coWhenever { true }
             }
 
             @Test
-            fun `expectFromFileContent will process with a file provided full wheneverWithFile`() = test {
-                expectFromFileContent("simpleExample/simple_example_scenario.txt") {
+            fun `expectFromFileContent will process with a file provided full wheneverWithFile`() = testBlocking {
+                coExpectFromFileContent("simpleExample/simple_example_scenario.txt") {
                     it.item.uppercase()
                 }
 
-                wheneverWithFile("simpleExample/simple_example_expected.md") {
+                coWheneverWithFile("simpleExample/simple_example_expected.md") {
                     it.item.readLines().last()
                 }
             }
 
             @Test
-            fun `expectNull `() = test {
+            fun `expectNull `() = testBlocking {
                 expectNull()
 
-                whenever { null }
+                coWhenever { null }
             }
         }
 
         @Nested
-        inner class ExpectedProvidedFolderTests : UnitSim("simpleExample") {
+        inner class ExpectedProvidedFolderTests : CoUnitSim("simpleExample") {
             @Test
-            fun `expectFromFileContent will process with a file provided full wheneverWithFile`() = test {
-                expectFromFileContent("simple_example_scenario.txt") {
+            fun `expectFromFileContent will process with a file provided full wheneverWithFile`() = testBlocking {
+                coExpectFromFileContent("simple_example_scenario.txt") {
                     val (content) = it
 
                     content.uppercase()
                 }
 
-                wheneverWithFile("simple_example_expected.md") {
+                coWheneverWithFile("simple_example_expected.md") {
                     val (file) = it
 
                     file.readLines().last()
@@ -174,8 +174,8 @@ class UnitSimTests {
             @Test
             fun `missing throws an expected throws an exception`() {
                 assertThrows<Exception> {
-                    test {
-                        expectFromFileContent("missing.txt") { it.toString() }
+                    testBlocking {
+                        coExpectFromFileContent("missing.txt") { it.toString() }
                     }
                 }
             }
@@ -183,31 +183,31 @@ class UnitSimTests {
 
         // with mocks & throws
         @Nested
-        inner class MockTests : UnitSim() {
+        inner class MockTests : CoUnitSim() {
             private val service = mockk<GeordiMockCompositionService>()
 
             private val target = GeordiMockTest(service)
 
             @Test
-            fun `mock will process with provider`() = test {
-                expect { true }
+            fun `mock will process with provider`() = testBlocking {
+                coExpect { true }
 
-                setupMocks {
+                coSetupMocks {
                     every { service.supply() } returns "test"
                     every { service.consume("test") }
                     every { service.accept("test") } returns true
                 }
 
-                whenever { target.test() }
+                coWhenever { target.test() }
             }
 
             @Test
-            fun `mock throws`() = test {
-                setupMocks {
+            fun `mock throws`() = testBlocking<Unit> {
+                coSetupMocks {
                     every { service.supply() } throws Exception("test")
                 }
 
-                wheneverThrows<Exception> {
+                coWheneverThrows<Exception> {
                     target.test()
                 }
             }
@@ -215,10 +215,10 @@ class UnitSimTests {
 
         // whenever with file
         @Nested
-        inner class WheneverTests : UnitSim() {
+        inner class WheneverTests : CoUnitSim() {
             @Test
-            fun `wheneverWithFile throws an exception`() = test {
-                wheneverThrows<Exception>({ wheneverWithFile("missing.txt") { } }) {
+            fun `wheneverWithFile throws an exception`() = testBlocking {
+                coWheneverThrows<Exception>({ coWheneverWithFile("missing.txt") { } }) {
                     assert(it.item.message == "File not found: missing.txt") {
                         """
                             
@@ -232,14 +232,14 @@ class UnitSimTests {
 
         // then default && then && then equals
         @Nested
-        inner class ThenTests : UnitSim() {
+        inner class ThenTests : CoUnitSim() {
             @Test
-            fun `then processes assertion`() = test {
-                expect { "TEST ME" }
+            fun `then processes assertion`() = testBlocking {
+                coExpect { "TEST ME" }
 
-                whenever { "test" }
+                coWhenever { "test" }
 
-                then { expect: String?, actual: String? ->
+                coThen { expect: String?, actual: String? ->
                     assert(expect != null)
                     assert(actual != null)
                     assert(expect!!.contains(actual!!.uppercase()))
@@ -247,21 +247,21 @@ class UnitSimTests {
             }
 
             @Test
-            fun `thenEquals assertion`() = test {
-                expect { "TEST" }
+            fun `thenEquals assertion`() = testBlocking {
+                coExpect { "TEST" }
 
-                whenever { "test".uppercase() }
+                coWhenever { "test".uppercase() }
 
-                thenEquals("New message") {
+                coThenEquals("New message") {
                     assert(true)
                 }
             }
 
             @Test
-            fun `defaultThenEquals assertion`() = test {
-                expect { "TEST" }
+            fun `defaultThenEquals assertion`() = testBlocking {
+                coExpect { "TEST" }
 
-                whenever { "test".uppercase() }
+                coWhenever { "test".uppercase() }
 
                 defaultThenEquals()
             }
@@ -276,7 +276,7 @@ class UnitSimTests {
             val simulationGroup = SimulationGroup.vars("test")
             val geordiTestClass = GeordiTestClass()
 
-            UnitSim.setup<GeordiTestClass> {
+            CoUnitSim.coSetup<GeordiTestClass> {
                 arrayOf(simulationGroup with ::`here is the method`)
             }
 
@@ -295,7 +295,7 @@ class UnitSimTests {
             val simulationGroup = SimulationGroup.vars("test")
             val geordiTestClass = GeordiTestClass()
 
-            UnitSim.setup<GeordiTestClass>(
+            CoUnitSim.coSetup<GeordiTestClass>(
                 simulationGroup with { ::`here is a different method` }
             )
 

@@ -24,7 +24,7 @@ import io.mockk.every as mockkEvery
 abstract class UnitSim(
     protected val testResourceFolder: String = "",
     protected val debugLogging: DebugLogging = DebugLogging.default(),
-    private val debugEnabled: Boolean = true
+    internal val debugEnabled: Boolean = true
 ) {
     // Collection of mock objects used in the tests.
     private val mocks: MutableList<Any> = mutableListOf()
@@ -71,11 +71,10 @@ abstract class UnitSim(
      * Runs a test with the provided specification lambda.
      *
      * @param horizontalLogs Determines if logs should be formatted horizontally.
-     * @param runnable A lambda that defines the test specifications within a TestSlice context.
+     * @param runnable A lambda that defines the test specifications within a [TestSlice] context.
      */
     fun <T> test(
         horizontalLogs: Boolean = false,
-
         runnable: TestSlice<T>.() -> Unit
     ) {
         val spec = TestSlice<T>(horizontalLogs)
@@ -95,7 +94,7 @@ abstract class UnitSim(
      *
      * @param spec The TestSlice instance containing the definitions for each test phase.
      */
-    private fun processTestFlow(spec: TestSlice<*>) {
+    internal fun processTestFlow(spec: TestSlice<*>) {
         spec.setupCall()       // Sets up the test environment.
         spec.expectCall()      // Defines the expected outcome.
         spec.mockSetupCall()   // Configures mocks for the test.
@@ -109,7 +108,7 @@ abstract class UnitSim(
      *
      * Uses the mockk library's verification functions to ensure all mocks were called as expected.
      */
-    private fun finalizeMocks() {
+    internal fun finalizeMocks() {
         // Iterate through all mock calls to verify each one.
         mockCalls.forEach {
             verify { it.mockCall() }
@@ -128,7 +127,7 @@ abstract class UnitSim(
      *
      * This ensures a clean state for subsequent tests.
      */
-    private fun cleanup() {
+    internal fun cleanup() {
         mockCalls.clear()    // Clears the list of mock calls.
         debugItems.clear()   // Clears the map of debug items.
     }
@@ -142,7 +141,7 @@ abstract class UnitSim(
      * @param useHorizontalLogs Flag to indicate if logs should be formatted horizontally.
      */
     @Suppress("TooManyFunctions")
-    inner class TestSlice<T>(
+    open inner class TestSlice<T>(
         private val useHorizontalLogs: Boolean = false
     ) {
         private var expected: T? = null  // The expected result of the test.
@@ -318,6 +317,12 @@ abstract class UnitSim(
             }
         }
 
+        /**
+         * Sets up an equality check with a custom message and an optional pre-assertion action.
+         *
+         * @param message The message to be displayed if the assertion fails.
+         * @param mappingFn A lambda that takes a value of type T and returns a value of type R.
+         */
         fun <R> mapEquals(message: String? = "", mappingFn: (T?) -> R?) {
             thenCall = {
                 val mappedActual = mappingFn(actual)
