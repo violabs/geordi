@@ -111,3 +111,10 @@ This project is licensed under the Apache 2.0 License - see the `LICENSE.md` fil
 ### Missing a feature?
 
 If you have a feature request, please open an issue and we'll see what we can do!
+
+### Gaps
+
+- [ ] Documentation
+- [ ] More examples
+- [ ] Signify skipped tests when isolated or ignored
+- [ ] A way to take a class and break it into the params.

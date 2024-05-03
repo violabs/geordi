@@ -16,10 +16,12 @@ plugins {
 }
 
 dependencies {
-    implementation("org.junit.jupiter:junit-jupiter-api:5.9.2")
-    implementation("io.mockk:mockk:1.13.5")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1-Beta")
+    implementation("org.junit.jupiter:junit-jupiter-api:5.11.0-M1")
+    implementation("io.mockk:mockk:1.13.10")
     implementation(kotlin("stdlib"))
     implementation(kotlin("test"))
+    implementation(kotlin("reflect"))
 }
 
 tasks.withType<Test>  {
