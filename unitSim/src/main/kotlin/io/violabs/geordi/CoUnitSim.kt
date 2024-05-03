@@ -48,6 +48,7 @@ abstract class CoUnitSim(
      * @param T The type of the expected and actual results in the test case.
      * @param useHorizontalLogs Flag to indicate if logs should be formatted horizontally.
      */
+    @Suppress("TooManyFunctions")
     inner class CoTestSlice<T>(useHorizontalLogs: Boolean = false) : UnitSim.TestSlice<T>(useHorizontalLogs) {
         /**
          * Sets up a test environment using the provided setup function for coroutines.
@@ -212,7 +213,7 @@ abstract class CoUnitSim(
          * Sets up an equality check with a custom message and an optional pre-assertion action coroutines.
          *
          * @param message The message to be displayed if the assertion fails.
-         * @param runnable An optional lambda that takes [DynamicProperties] and performs an
+         * @param runnable An optional lambda that takes [DynamicProperties<T>] and performs an
          *                 action before the assertion.
          */
         fun coThenEquals(message: String, runnable: (suspend (props: DynamicProperties<T>) -> Unit)? = null) {
@@ -232,7 +233,7 @@ abstract class CoUnitSim(
          * @param mappingFn A lambda that takes a value of type T and returns a value of type R.
          */
         fun <R> coMapEquals(message: String? = "", mappingFn: (T?) -> R?) {
-            mapEquals {
+            mapEquals(message) {
                 runBlocking {
                     mappingFn(it)
                 }
