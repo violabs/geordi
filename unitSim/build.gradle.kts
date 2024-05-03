@@ -4,7 +4,7 @@ import org.jetbrains.dokka.gradle.DokkaTask
 import java.io.FileNotFoundException
 import java.net.URI
 
-version = "1.0.4"
+version = "1.0.5"
 
 plugins {
     jacoco
