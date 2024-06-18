@@ -10,6 +10,16 @@ class UserService(
 
         existingUser.account = accountClient.getAccountByClientId(existingUser.id)
 
+        takeItIn(anotherMethod())
+
         return userRepository.saveUser(existingUser)
+    }
+
+    fun anotherMethod(): String {
+        return "THIS SHOULD NOT BE"
+    }
+
+    fun takeItIn(input: String) {
+        println("I took in $input")
     }
 }

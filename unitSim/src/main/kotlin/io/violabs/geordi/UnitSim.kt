@@ -2,6 +2,7 @@ package io.violabs.geordi
 
 import io.mockk.confirmVerified
 import io.mockk.mockkClass
+import io.mockk.spyk
 import io.mockk.verify
 import io.violabs.geordi.debug.DebugLogging
 import io.violabs.geordi.exceptions.FileNotFoundException
@@ -55,6 +56,8 @@ abstract class UnitSim(
      * @return The created mock object.
      */
     inline fun <reified T : Any> mock(): T = mockkClass(type = T::class)
+
+    inline fun <reified T : Any> spy(objectToCopy: T): T = spyk(objectToCopy)
 
     /**
      * Sets up a mock call and adds it to the list of mock calls for verification.
