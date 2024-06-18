@@ -40,6 +40,22 @@ class UnitSimTests {
     }
 
     @Test
+    fun `spy will create a spy of a specified type`() {
+        val unitSim = object : UnitSim() {
+            fun testSpy(): DebugLogging = spy(DebugLogging.default())
+        }
+
+        val spy = unitSim.testSpy()
+
+        assert(spy::class.simpleName?.contains("DebugLogging") == true) {
+            """
+                EXPECT: DebugLogging
+                ACTUAL: ${spy::class.simpleName}
+            """.trimIndent()
+        }
+    }
+
+    @Test
     fun `every will create mock task`() {
         val unitSim = object : UnitSim() {
             fun testEvery(): MockTask<String> = every { "test" }

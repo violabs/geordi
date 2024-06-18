@@ -48,4 +48,27 @@ class ComplexKotlinTests : UnitSim() {
 
         whenever { userService.updateUser(user) }
     }
+
+    @Test
+    fun `show a spy example`() = test {
+        val user = User("test")
+        val resultUser = user.copy(id = "1")
+        val account = Account(1)
+
+        val spy = spy(userService)
+
+        expect {
+            resultUser.copy(id = "1", account = Account(1))
+        }
+
+        setupMocks {
+            every { userRepository.findUserByName("test") } returns resultUser
+            every { accountClient.getAccountByClientId("1") } returns account
+            every { userRepository.saveUser(it.expected!!) } returns it.expected!!
+            every { spy.anotherMethod() } returns "NOW THIS IS IT!"
+            every { spy.takeItIn("NOW THIS IS IT!") } returns Unit
+        }
+
+        whenever { spy.updateUser(user) }
+    }
 }
