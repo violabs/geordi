@@ -4,7 +4,7 @@ import org.jetbrains.dokka.gradle.DokkaTask
 import java.io.FileNotFoundException
 import java.net.URI
 
-version = "1.0.5"
+version = "1.0.6"
 
 plugins {
     jacoco
@@ -16,8 +16,8 @@ plugins {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1-Beta")
-    implementation("org.junit.jupiter:junit-jupiter-api:5.11.0-M1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0-RC")
+    implementation("org.junit.jupiter:junit-jupiter-api:5.11.0-M2")
     implementation("io.mockk:mockk:1.13.10")
     implementation(kotlin("stdlib"))
     implementation(kotlin("test"))
@@ -193,6 +193,6 @@ signing {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(11) // Specify your desired Java version here
+        languageVersion = JavaLanguageVersion.of(17) // Specify your desired Java version here
     }
 }
