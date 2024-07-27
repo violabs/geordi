@@ -4,6 +4,7 @@ metadata:
   name: geordi
   annotations:
     github.com/project-slug: violabs/geordi
+    backstage.io/techdocs-ref: value
 spec:
   type: other
   lifecycle: unknown
