@@ -1,0 +1,10 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: geordi
+  annotations:
+    github.com/project-slug: violabs/geordi
+spec:
+  type: other
+  lifecycle: unknown
+  owner: violabs
