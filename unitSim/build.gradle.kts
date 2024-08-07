@@ -11,14 +11,15 @@ plugins {
     java
     `maven-publish`
     signing
-    id("io.gitlab.arturbosch.detekt") version "1.23.4"
-    id("org.jetbrains.kotlinx.kover") version "0.7.5"
+    alias(libs.plugins.detekt)
+    alias(libs.plugins.kover)
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0-RC")
-    implementation("org.junit.jupiter:junit-jupiter-api:5.11.0-M2")
-    implementation("io.mockk:mockk:1.13.10")
+    implementation(libs.kotlinxCoroutines)
+    implementation(libs.kotlinxSerialization)
+    implementation(libs.junitJupiterApi)
+    implementation(libs.mockk)
     implementation(kotlin("stdlib"))
     implementation(kotlin("test"))
     implementation(kotlin("reflect"))
@@ -57,10 +58,10 @@ tasks.withType<Detekt>().configureEach {
 }
 
 tasks.withType<Detekt>().configureEach {
-    jvmTarget = JavaVersion.VERSION_11.majorVersion
+    jvmTarget = JavaVersion.VERSION_17.majorVersion
 }
 tasks.withType<DetektCreateBaselineTask>().configureEach {
-    jvmTarget = JavaVersion.VERSION_11.majorVersion
+    jvmTarget = JavaVersion.VERSION_17.majorVersion
 }
 
 tasks.named<DokkaTask>("dokkaJavadoc") {

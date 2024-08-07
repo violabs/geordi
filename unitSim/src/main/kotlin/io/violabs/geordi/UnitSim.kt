@@ -5,7 +5,8 @@ import io.mockk.mockkClass
 import io.mockk.spyk
 import io.mockk.verify
 import io.violabs.geordi.debug.DebugLogging
-import io.violabs.geordi.exceptions.FileNotFoundException
+import io.violabs.geordi.exceptions.NotFoundException
+import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.extension.ExtendWith
 import java.io.File
 import kotlin.reflect.KFunction
@@ -19,18 +20,22 @@ import io.mockk.every as mockkEvery
  *
  * @param testResourceFolder Directory path for test resources, if any.
  * @param debugLogging Instance for handling debug logging operations.
+ * @param json Instance of the Json serializer for serialization and deserialization.
  * @param debugEnabled Flag to enable or disable debug logging.
  */
 @ExtendWith(WarpDriveEngine::class)
 abstract class UnitSim(
     protected val testResourceFolder: String = "",
     protected val debugLogging: DebugLogging = DebugLogging.default(),
+    protected val json: Json? = null,
     internal val debugEnabled: Boolean = true
 ) {
     // Collection of mock objects used in the tests.
     private val mocks: MutableList<Any> = mutableListOf()
+
     // Collection of mock call tasks to be verified.
     private val mockCalls = mutableListOf<MockTask<*>>()
+
     // Storage for debug items.
     private val debugItems = mutableMapOf<String, Any?>()
 
@@ -38,7 +43,7 @@ abstract class UnitSim(
         val fullFilename = filename.takeIf { testResourceFolder.isEmpty() } ?: "$testResourceFolder/$filename"
         val uri = this::class.java.classLoader
             .getResource(fullFilename)
-            ?.toURI() ?: throw FileNotFoundException(filename)
+            ?.toURI() ?: throw NotFoundException.File(filename)
         return File(uri)
     }
 
@@ -80,7 +85,7 @@ abstract class UnitSim(
         horizontalLogs: Boolean = false,
         runnable: TestSlice<T>.() -> Unit
     ) {
-        val spec = TestSlice<T>(horizontalLogs)
+        val spec = TestSlice<T>(json, horizontalLogs)
 
         runnable(spec)
 
@@ -145,8 +150,10 @@ abstract class UnitSim(
      */
     @Suppress("TooManyFunctions")
     open inner class TestSlice<T>(
+        val json: Json?,
         private val useHorizontalLogs: Boolean = false
     ) {
+
         private var expected: T? = null  // The expected result of the test.
         private var actual: T? = null    // The actual result obtained from the test.
 
